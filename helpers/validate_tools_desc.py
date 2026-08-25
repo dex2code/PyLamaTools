@@ -5,6 +5,7 @@ from loguru import logger
 
 
 class ParameterProperty(BaseModel):
+    """Свойство параметра функции (схема JSON Schema)."""
     type: str
     description: str
     default: Optional[Any] = None
@@ -36,11 +37,23 @@ class Tool(BaseModel):
 
 
 @logger.catch
-def validate_tool_desc(tool_dict: Dict) -> bool:
+def validate_tool_desc(tool_dict: Dict[str, Any]) -> bool:
+    """
+    Загружает и валидирует описание инструмента.
+
+    Args:
+        tool_dict: Словарь, соответствующий схеме Tool.
+
+    Returns:
+        True при успехе, иначе False.
+    """
     try:
         Tool.model_validate(tool_dict)
     except ValidationError as e:
-        logger.warning("Ошибка валидации описания инструмента!")
+        logger.error(f"Ошибка валидации описания инструмента! {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Неожиданная ошибка при валидации описания инструмента! {e}")
         return False
 
     return True

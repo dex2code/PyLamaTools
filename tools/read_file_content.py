@@ -1,8 +1,10 @@
 from __future__ import annotations
+from loguru import logger
 from typing import Dict, Optional, Any
 from pathlib import Path
 
 
+@logger.catch
 def read_file_content(
         file_path: str,
         encoding: str = 'utf-8',

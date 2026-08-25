@@ -1,11 +1,13 @@
 from __future__ import annotations
-import os
+from loguru import logger
 from typing import Dict, Any, List
 from pathlib import Path
 from datetime import datetime
+import os
 import fnmatch
 
 
+@logger.catch
 def find_files_and_dirs(
         directory: str,
         pattern: str,

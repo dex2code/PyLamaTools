@@ -5,7 +5,7 @@ settings = {
     "system_prompt_file_enc": "utf-8",
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "qwen3.5:9b",
-    "display_thinking": False,
+    "display_thinking": True,
     "chat_streaming": True,
     "model_thinking": True,
     "options": {
