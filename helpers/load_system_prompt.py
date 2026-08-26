@@ -4,7 +4,7 @@ from typing import Dict, Any
 from pathlib import Path
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def load_system_prompt(settings: Dict[str, Any],
                        base_dir: Path) -> str:
     """

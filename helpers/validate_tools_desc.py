@@ -36,7 +36,7 @@ class Tool(BaseModel):
     function: Function
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def validate_tool_desc(tool_dict: Dict[str, Any]) -> bool:
     """
     Загружает и валидирует описание инструмента.

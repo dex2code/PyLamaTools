@@ -4,7 +4,7 @@ from typing import Dict, Optional, Any
 from pathlib import Path
 
 
-@logger.catch
+@logger.catch(reraise=False)
 def read_file_content(
         file_path: str,
         encoding: str = 'utf-8',

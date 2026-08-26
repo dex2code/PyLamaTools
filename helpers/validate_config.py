@@ -20,7 +20,7 @@ class SettingsModel(BaseModel):
     options: Optional[Dict] = None
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def validate_config(config: Dict[str, Any]) -> bool:
     """
     Проверяет, что переданный словарь соответствует схеме SettingsModel.

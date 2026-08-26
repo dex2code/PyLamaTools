@@ -5,7 +5,7 @@ import ollama
 import json
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def execute_tool(tool_call: ollama.Message.ToolCall, tool_functions: Dict[str, Any]) -> str:
     """
     Выполняет вызов инструмента на основе данных от LLM.

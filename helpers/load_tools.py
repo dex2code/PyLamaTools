@@ -3,12 +3,11 @@ from loguru import logger
 from helpers.validate_tools_desc import validate_tool_desc
 from typing import Dict, Any, List, Tuple
 from pathlib import Path
-import sys
 import json
 import importlib
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def load_tools(
         settings: Dict[str, Any],
         base_dir: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:

@@ -9,7 +9,7 @@ import ollama
 import json
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def chat_model(messages: List[Dict[str, Any]],
                ollama_client: ollama.Client,
                tool_descriptions: List[Dict[str, Any]],

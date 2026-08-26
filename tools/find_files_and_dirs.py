@@ -7,7 +7,7 @@ import os
 import fnmatch
 
 
-@logger.catch
+@logger.catch(reraise=False)
 def find_files_and_dirs(
         directory: str,
         pattern: str,

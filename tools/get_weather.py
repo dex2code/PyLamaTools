@@ -8,7 +8,7 @@ proxies = {
     "https": "http://127.0.0.1:10808"
 }
 
-@logger.catch
+@logger.catch(reraise=False)
 def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
     """
     Возвращает погоду относительно IP-адреса клиента.

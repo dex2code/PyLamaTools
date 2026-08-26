@@ -15,7 +15,7 @@ import json
 import ollama
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def main(system_prompt: str,
          ollama_client: ollama.Client,
          tool_descriptions: List[Dict[str, Any]],

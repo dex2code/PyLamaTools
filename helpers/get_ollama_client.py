@@ -1,11 +1,10 @@
 from __future__ import annotations
 from loguru import logger
 from typing import Dict, Any
-import sys
 import ollama
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def get_ollama_client(settings: Dict[str, Any]) -> ollama.Client:
     """
     Создаёт клиента Ollama и проверяет доступность указанной модели.

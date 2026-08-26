@@ -3,7 +3,7 @@ settings = {
     "tools_dir": "tools",
     "system_prompt_file": "system_prompt.txt",
     "system_prompt_file_enc": "utf-8",
-    "ollama_url": "http://127.0.0.1:11434",
+    "ollama_url": "http://127.0.0.1:11435н",
     "ollama_model": "qwen3.5:9b",
     "tool_iterations": 16,
     "context_max_tokens": 8000,

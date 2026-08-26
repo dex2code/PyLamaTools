@@ -5,7 +5,7 @@ import json
 import tiktoken
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def count_tokens(messages: List[Dict[str, Any]], encoding_name: str) -> int:
     """
     Подсчитывает количество токенов в списке сообщений, сериализуя каждое сообщение в JSON.
@@ -19,7 +19,7 @@ def count_tokens(messages: List[Dict[str, Any]], encoding_name: str) -> int:
     return len(encoder.encode(text))
 
 
-@logger.catch
+@logger.catch(reraise=True)
 def truncate_by_tokens(messages: List[Dict[str, Any]],
                        max_tokens: int,
                        encoding_name: str) -> List[Dict[str, Any]]:
