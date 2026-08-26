@@ -33,16 +33,18 @@ def get_ollama_client(settings: Dict[str, Any]) -> ollama.Client:
         raise ConnectionError(f"Ошибка подключения к API Ollama")
 
     # Проверяем, что наша модель есть в Ollama
+    our_model: str = settings['ollama_model']
     model_names = [model.model for model in list_models.models]
-    if settings['ollama_model'] not in model_names:
-        logger.error(f"Модель, указанная в настройках ({settings['ollama_model']}), "
+    if our_model not in model_names:
+        logger.error(f"Модель, указанная в настройках ({our_model}), "
                      f"отсутствует в списке 'ollama ls'.\n"
                      f"Список доступных моделей: {model_names}"
-                     f"\nСкачайте указанную модель: 'ollama pull {settings['ollama_model']}'")
+                     f"\nСкачайте указанную модель: 'ollama pull {our_model}'")
         raise RuntimeError(f"Некорректное название модели в настройках")
 
     logger.info(f"Успешно подключились к Ollama API {settings['ollama_url']} "
                 f"и выбрали модель {settings['ollama_model']}")
+
     logger.debug(f" <- Out function helpers.get_ollama_client.get_ollama_client()")
     return ollama_client
 

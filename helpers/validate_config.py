@@ -12,8 +12,10 @@ class SettingsModel(BaseModel):
     system_prompt_file_enc: str
     ollama_url: str
     ollama_model: str
+    tool_iterations: int
+    context_max_tokens: int
+    context_encoding: str
     display_thinking: bool
-    chat_streaming: bool
     model_thinking: bool
     options: Optional[Dict] = None
 

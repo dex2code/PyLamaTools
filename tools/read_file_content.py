@@ -21,6 +21,7 @@ def read_file_content(
     Returns:
         Словарь с полями:
             - success (bool): True, если файл успешно прочитан.
+            - file_path (str): Путь к файлу (абсолютный или относительный). 
             - content (Optional[str]): Содержимое файла (при success=True).
             - size_bytes (int): Размер прочитанного содержимого в байтах.
             - error (Optional[str]): Описание ошибки (при success=False).
@@ -30,6 +31,7 @@ def read_file_content(
     if not path_obj.exists():
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Файл '{file_path}' не существует."
@@ -37,6 +39,7 @@ def read_file_content(
     if not path_obj.is_file():
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Путь '{file_path}' не является файлом."
@@ -48,6 +51,7 @@ def read_file_content(
     except FileNotFoundError:
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Файл '{path_obj}' не найден (возможно, он был удален или перемещен)."
@@ -55,6 +59,7 @@ def read_file_content(
     except PermissionError:
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Нет прав доступа для чтения файла '{path_obj}'."
@@ -62,6 +67,7 @@ def read_file_content(
     except UnicodeDecodeError as e:
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Ошибка декодирования файла '{path_obj}' (возможно, неверная кодировка или бинарный файл): {str(e)}"
@@ -69,6 +75,7 @@ def read_file_content(
     except OSError as e:
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Ошибка при чтении файла '{path_obj}': {str(e)}"
@@ -76,6 +83,7 @@ def read_file_content(
     except Exception as e:
         return {
             "success": False,
+            "file_path": file_path,
             "content": None,
             "size_bytes": 0,
             "error": f"Неизвестная ошибка при чтении файла '{path_obj}': {str(e)}"
@@ -83,6 +91,7 @@ def read_file_content(
 
     return {
         "success": True,
+        "file_path": file_path,
         "content": content,
         "size_bytes": len(content.encode(encoding)),
         "error": None
@@ -92,7 +101,7 @@ read_file_content.tool_description = {
     "type": "function",
     "function": {
         "name": "read_file_content.read_file_content",
-        "description": "Читает содержимое текстового файла. Возвращает словарь с полями: success (bool), content (строка или None), size_bytes (int), error (строка или None). Поддерживает указание кодировки (по умолчанию utf-8) и ограничение на объём чтения (max_bytes).",
+        "description": "Читает содержимое текстового файла. Возвращает словарь с полями: success (bool), file_path (str), content (строка или None), size_bytes (int), error (строка или None). Поддерживает указание кодировки (по умолчанию utf-8) и ограничение на объём чтения (max_bytes).",
         "parameters": {
             "type": "object",
             "properties": {

@@ -7,6 +7,7 @@ from helpers.load_tools import load_tools
 from helpers.load_system_prompt import load_system_prompt
 from helpers.get_ollama_client import get_ollama_client
 from chat_model import chat_model
+from cut_messages import truncate_by_tokens
 from typing import List, Dict, Any
 import colorama
 import sys
@@ -56,14 +57,17 @@ def main(system_prompt: str,
                 "content": user_input
             }
         )
+        messages = truncate_by_tokens(messages=messages,
+                                      max_tokens=settings['context_max_tokens'],
+                                      encoding_name=settings['context_encoding'])
         logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
 
         try:
             # Вызываем обработчик чата
             messages = chat_model(messages=messages,
-                                ollama_client=ollama_client,
-                                tool_descriptions=tool_descriptions,
-                                tool_functions=tool_functions)
+                                  ollama_client=ollama_client,
+                                  tool_descriptions=tool_descriptions,
+                                  tool_functions=tool_functions)
         except Exception as e:
             logger.error(f"Ошибка взаимодействия с моделью: {e}")
             if messages and messages[-1]["role"] == "user":
