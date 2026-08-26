@@ -72,11 +72,9 @@ def chat_model(messages: List[Dict[str, Any]],
                 logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
             continue
         else:
-            messages = truncate_by_tokens(messages=messages,
-                                          max_tokens=settings['context_max_tokens'],
-                                          encoding_name=settings['context_encoding'])
             print(f"   {colorama.Style.DIM}Размер контекста: "
-                  f"{count_tokens(messages=messages, encoding_name=settings['context_encoding'])} "
+                  f"{count_tokens(messages=str(messages),
+                                  encoding_name=settings['context_encoding'])} "
                   f"токенов{colorama.Style.RESET_ALL}")
             break
 

@@ -7,7 +7,7 @@ from helpers.load_tools import load_tools
 from helpers.load_system_prompt import load_system_prompt
 from helpers.get_ollama_client import get_ollama_client
 from chat_model import chat_model
-from cut_messages import truncate_by_tokens
+from cut_messages import truncate_by_tokens, count_tokens
 from typing import List, Dict, Any
 import colorama
 import sys
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     print(f"  🤖 {colorama.Style.DIM}Инструментов: {len(tool_descriptions)}")
     print(f"  🤝 {colorama.Style.DIM}API: {settings['ollama_url']}")
     print(f"  🧠 {colorama.Style.DIM}Модель: {settings['ollama_model']}")
-    print(f"  💬 {colorama.Style.DIM}Системный промт (символов): {len(system_prompt)}")
+    print(f"  💬 {colorama.Style.DIM}Системный промт (токенов): {count_tokens(system_prompt)}")
     print()
 
     # Исполняем главную функцию с отслеживанием Ctrl+C
