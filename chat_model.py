@@ -22,7 +22,7 @@ def chat_model(messages: List[Dict[str, Any]],
     while iteration < settings['tool_iterations']:
         iteration += 1
 
-        print("⏳ ", flush=True)
+        print("⏳ ", end="", flush=True)
 
         # Передаем в модель контекст чата и получаем ответ
         response_model = ollama_client.chat(
