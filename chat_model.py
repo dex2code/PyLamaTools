@@ -58,7 +58,7 @@ def chat_model(messages: List[Dict[str, Any]],
         if "tool_calls" in message_model and message_model['tool_calls']:
             tool_call: ollama.Message.ToolCall
             for tool_call in message_model['tool_calls']:
-                print(f"⚙️ {colorama.Fore.LIGHTRED_EX}Вызов инструмента "
+                print(f"⚙️  {colorama.Fore.LIGHTRED_EX}Вызов инструмента "
                       f"'{tool_call['function']['name']}' "
                       f"с аргументами {tool_call['function']['arguments']}")
                 tool_result = execute_tool(tool_call=tool_call, tool_functions=tool_functions)
@@ -76,8 +76,8 @@ def chat_model(messages: List[Dict[str, Any]],
                                           max_tokens=settings['context_max_tokens'],
                                           encoding_name=settings['context_encoding'])
             print(f"   {colorama.Style.DIM}Размер контекста: "
-                  f"{count_tokens(messages=messages, encoding_name=settings['context_encoding'])}/"
-                  f"{settings['context_max_tokens']} ток.{colorama.Style.RESET_ALL}")
+                  f"{count_tokens(messages=messages, encoding_name=settings['context_encoding'])} "
+                  f"токенов{colorama.Style.RESET_ALL}")
             break
 
     logger.debug(" <- Out function chat_model.chat_model()")

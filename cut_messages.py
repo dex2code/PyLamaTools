@@ -28,7 +28,7 @@ def truncate_by_tokens(messages: List[Dict[str, Any]],
     """
     logger.debug(" -> In function cut.messages.truncate_by_tokens()")
 
-    if not messages:
+    if not max_tokens or not messages:
         return messages
 
     truncated = messages.copy()
