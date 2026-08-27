@@ -92,10 +92,12 @@ if __name__ == "__main__":
 
     try:
         # Получаем инструменты и их описания
-        tools_functions, tool_descriptions = load_tools(settings=settings, base_dir=base_dir)
+        tools_functions, tool_descriptions = load_tools(settings=settings,
+                                                        base_dir=base_dir)
 
         # Загружаем системный промт
-        system_prompt = load_system_prompt(settings=settings, base_dir=base_dir)
+        system_prompt = load_system_prompt(settings=settings,
+                                           base_dir=base_dir)
 
         # Подключаемся к Ollama API и получаем клиента
         ollama_client = get_ollama_client(settings=settings)
