@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from loguru import logger
 import requests
 
@@ -31,6 +31,8 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
         r.raise_for_status()
         d = r.json()
         c = d.get("current_condition", [{}])[0]
+        t = c.get("FeelsLikeC", 0)
+        h = c.get("humidity", 0)
     except Exception as e:
         return {
             "success": False,
@@ -43,8 +45,8 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
     return {
         "success": True,
         "error": "",
-        "temperature": c.get("FeelsLikeC"),
-        "humidity": c.get("humidity")
+        "temperature": t,
+        "humidity": h
     }
 
 
@@ -55,8 +57,7 @@ get_weather.tool_description = {
         "description": "Возвращает погоду относительно местоположения клиента (геолокация вычисляется по IP-адресу клиента). Возвращает структурированный словарь с полями: success (bool), error (str), tenperature (str), humidity (str). Если запрос завершается с ошибкой, success=false и error содержит описание проблемы.",
         "parameters": {
             "type": "object",
-            "properties": {
-            },
+            "properties": {},
             "required": [],
             "additionalProperties": False
         }

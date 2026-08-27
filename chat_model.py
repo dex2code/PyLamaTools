@@ -3,10 +3,9 @@ from typing import List, Dict, Any
 from loguru import logger
 from config import settings
 from execute_tool import execute_tool
-from cut_messages import count_tokens, truncate_by_tokens
+from cut_messages import count_tokens
 import colorama
 import ollama
-import json
 
 
 @logger.catch(reraise=True)

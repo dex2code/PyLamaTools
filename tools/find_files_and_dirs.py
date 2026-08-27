@@ -67,11 +67,11 @@ def find_files_and_dirs(
                             stat_info = dir_path.stat()
                             mtime = datetime.fromtimestamp(stat_info.st_mtime).isoformat()
                         except Exception as e:
-                            continue  # Пропускаем каталог, если не удалось получить информацию о нем
+                            continue # Пропускаем каталог, если не удалось получить информацию
                         result_items.append({
                             "path": str(dir_path.resolve()),
                             "name": dir_name,
-                            "size_bytes": 0,  # Размер каталогов устанавливаем в 0
+                            "size_bytes": 0, # Размер каталогов устанавливаем в 0
                             "modified": mtime,
                             "is_dir": True
                         })
