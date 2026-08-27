@@ -57,11 +57,10 @@ def main(system_prompt: str,
                 "content": user_input
             }
         )
+        # Отрезаем старую часть контекста под настройки длины
         messages = truncate_by_tokens(messages=messages,
                                       max_tokens=settings['context_max_tokens'],
                                       encoding_name=settings['context_encoding'])
-        logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
-
         try:
             # Вызываем обработчик чата
             messages = chat_model(messages=messages,

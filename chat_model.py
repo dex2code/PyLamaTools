@@ -69,7 +69,6 @@ def chat_model(messages: List[Dict[str, Any]],
                         "content": tool_result
                     }
                 )
-                logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
             continue
         else:
             print(f"   {colorama.Style.DIM}Размер контекста: "
