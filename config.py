@@ -11,7 +11,9 @@ settings = {
     "display_thinking": True,
     "model_thinking": True,
     "options": {
-        "think": True
+        "temperature": 1,
+        "top_k": 20,
+        "top_p": 0.95
     }
 }
 

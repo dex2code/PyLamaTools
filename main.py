@@ -11,7 +11,6 @@ from cut_messages import truncate_by_tokens, count_tokens
 from typing import List, Dict, Any
 import colorama
 import sys
-import json
 import ollama
 
 
@@ -72,8 +71,6 @@ def main(system_prompt: str,
             if messages and messages[-1]["role"] == "user":
                 messages.pop()
             continue
-
-        logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
         
 
 if __name__ == "__main__":

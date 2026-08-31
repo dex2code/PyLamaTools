@@ -6,6 +6,7 @@ from execute_tool import execute_tool
 from cut_messages import count_tokens
 import colorama
 import ollama
+import json
 
 
 @logger.catch(reraise=True)
@@ -44,16 +45,6 @@ def chat_model(messages: List[Dict[str, Any]],
                 print(f"{colorama.Style.DIM}{message_model['thinking']}{colorama.Style.RESET_ALL}",
                       flush=True)
 
-        if "content" in message_model and message_model['content']:
-            print(f"\r{assistant_nick}: {colorama.Fore.WHITE}{message_model['content']}",
-                  flush=True)
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": message_model['content']
-                }
-            )
-
         if "tool_calls" in message_model and message_model['tool_calls']:
             tool_call: ollama.Message.ToolCall
             for tool_call in message_model['tool_calls']:
@@ -68,12 +59,22 @@ def chat_model(messages: List[Dict[str, Any]],
                         "content": tool_result
                     }
                 )
+                logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
             continue
-        else:
+        elif "content" in message_model and message_model['content']:
+            print(f"\r{assistant_nick}: {colorama.Fore.WHITE}{message_model['content']}",
+                  flush=True)
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": message_model['content']
+                }
+            )
             print(f"   {colorama.Style.DIM}Размер контекста: "
                   f"{count_tokens(messages=str(messages),
                                   encoding_name=settings['context_encoding'])} "
                   f"токенов{colorama.Style.RESET_ALL}")
+            logger.debug(f"{json.dumps(messages, indent=2, ensure_ascii=False)}")
             break
 
     logger.debug(" <- Out function chat_model.chat_model()")
