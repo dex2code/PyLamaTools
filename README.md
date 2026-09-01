@@ -57,7 +57,7 @@ python3 -m main
 
 ---
 
-# Пример использования
+## Пример использования
 
 $ python -m main
 <pre>
@@ -127,3 +127,117 @@ $ python -m main
 - Обувь: кроссовки или ботинки на нескользящей подошве
 Также можно взять шарф и шапку — особенно если планируется вечерняя прогулка!
 </pre>
+
+---
+
+# Расширение функционала
+
+Краткая инструкция для создания функций-навыков, совместимых с нашей системой (OpenAI Function Calling).
+
+---
+
+## 1. Общие требования
+
+- Каждый навык – отдельный Python-модуль.
+- Обязательные импорты: `from __future__ import annotations`, `from loguru import logger`, типизация из `typing`.
+- Функция должна иметь аннотации типов для всех аргументов и возвращаемого значения.
+- Используйте декоратор `@logger.catch(reraise=False)` для автоматического логирования исключений.
+
+---
+
+## 2. Сигнатура и документация
+
+```python
+def my_tool(param1: str, param2: int = 42) -> Dict[str, Any]:
+    """
+    Краткое описание.
+
+    Args:
+        param1: Описание.
+        param2: Описание (необязательный).
+
+    Returns:
+        Словарь с полями:
+            - success (bool)
+            - error (Optional[str])
+            - ... (дополнительные поля)
+    """
+```
+
+---
+
+## 3. Обработка ошибок
+
+- Явно проверяйте входные данные и возвращайте словарь с `success=False` и сообщением в `error`.
+- Все исключения должны быть перехвачены (либо явно, либо через `@logger.catch`).
+- При ошибке все дополнительные поля заполняйте значениями по умолчанию (пустые списки, 0, `None`).
+
+**Шаблон:**
+
+```python
+@logger.catch(reraise=False)
+def my_tool(...) -> Dict[str, Any]:
+    if not condition:
+        return {"success": False, "error": "...", "data": [], "count": 0}
+    try:
+        # основная логика
+        return {"success": True, "error": None, "data": result, "count": len(result)}
+    except Exception as e:
+        return {"success": False, "error": str(e), "data": [], "count": 0}
+```
+
+---
+
+## 4. Возвращаемое значение
+
+Словарь **обязан** содержать:
+
+- `success` (bool)
+- `error` (Optional[str]) – `None` при успехе, иначе описание проблемы.
+
+Дополнительные поля (например, `files`, `data`, `count`) определяются разработчиком и должны быть описаны в docstring.
+
+---
+
+## 5. Описание инструмента для LLM (`tool_description`)
+
+Добавьте атрибут к функции:
+
+```python
+my_tool.tool_description = {
+    "type": "function",
+    "function": {
+        "name": "module_name.my_tool",
+        "description": "Что делает инструмент",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "param1": {"type": "string", "description": "..."},
+                "param2": {"type": "integer", "description": "...", "default": 42}
+            },
+            "required": ["param1"],
+            "additionalProperties": False
+        }
+    }
+}
+```
+
+- Все параметры должны быть описаны в `properties`, их типы и `default` (если есть).
+- Обязательные параметры перечислены в `required`.
+
+---
+
+## 6. Чек-лист перед сдачей
+
+- [ ] Добавлены все импорты (включая `annotations`).
+- [ ] Есть аннотации типов.
+- [ ] Применён `@logger.catch`.
+- [ ] Написана docstring с `Args` и `Returns`.
+- [ ] Возвращаемый словарь содержит `success` и `error`.
+- [ ] Ошибки обработаны и возвращают структуру с дефолтными значениями.
+- [ ] Определён атрибут `tool_description` в формате OpenAI.
+- [ ] Код протестирован на корректных и некорректных данных.
+
+---
+
+**Пример** – см. эталонную функцию `find_files_and_dirs` в репозитории.
