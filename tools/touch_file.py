@@ -26,11 +26,15 @@ def touch_file(
         "error": None
     }
 
-    file_path = Path(directory) / filename
+    if not directory or not filename:
+        result["error"] = "Не указаны обязательные параметры вызова функции!"
+        return result
+
+    base = Path(directory).resolve()
+    file_path = base / filename
 
     try:
-        with open(file_path, 'x') as f:
-            pass
+        file_path.touch(exist_ok=False)
 
     except FileExistsError:
         result["error"] = f"Файл '{filename}' уже существует в '{directory}'"
