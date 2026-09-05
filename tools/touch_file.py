@@ -30,10 +30,10 @@ def touch_file(
         result["error"] = "Не указаны обязательные параметры вызова функции!"
         return result
 
-    base = Path(directory).resolve()
-    file_path = base / filename
 
     try:
+        base = Path(directory).resolve()
+        file_path = base / filename
         file_path.touch(exist_ok=False)
 
     except FileExistsError:
