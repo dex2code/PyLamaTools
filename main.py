@@ -8,7 +8,7 @@ from helpers.load_tools import load_tools
 from helpers.load_system_prompt import load_system_prompt
 from helpers.get_ollama_client import get_ollama_client
 from chat_model import chat_model
-from cut_messages import truncate_by_tokens, count_tokens
+from helpers.cut_messages import truncate_by_tokens, count_tokens
 from typing import List, Dict, Any
 import colorama
 import sys

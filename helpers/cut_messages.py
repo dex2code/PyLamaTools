@@ -2,7 +2,7 @@ from __future__ import annotations
 from config import settings
 from typing import List, Dict, Any
 from loguru import logger
-import tiktoken
+import puretiktoken
 
 
 @logger.catch(reraise=True)
@@ -13,7 +13,7 @@ def count_tokens(messages: str,
     """
     logger.debug(" -> In function cut.messages.count_tokens()")
 
-    encoder = tiktoken.get_encoding(encoding_name)
+    encoder = puretiktoken.get_encoding(encoding_name)
 
     logger.debug(" <- Out function cut.messages.count_tokens()")
     return len(encoder.encode(messages))
