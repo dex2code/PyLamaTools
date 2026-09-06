@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import List, Dict, Any
 from loguru import logger
 from config import settings
-from execute_tool import execute_tool
+from helpers.execute_tool import execute_tool
 from cut_messages import count_tokens
+from pathlib import Path
 import colorama
 import ollama
 import json
@@ -13,7 +14,8 @@ import json
 def chat_model(messages: List[Dict[str, Any]],
                ollama_client: ollama.Client,
                tool_descriptions: List[Dict[str, Any]],
-               tool_functions: Dict[str, Any]) -> List[Dict[str, Any]]:
+               tool_functions: Dict[str, Any],
+               workspace_dir: Path) -> List[Dict[str, Any]]:
     logger.debug(" -> In function chat_model.chat_model()")
 
     assistant_nick = f"🤖 {colorama.Fore.CYAN}{settings['ollama_model']}{colorama.Fore.WHITE}"
@@ -51,7 +53,9 @@ def chat_model(messages: List[Dict[str, Any]],
                 print(f"⚙️  {colorama.Fore.LIGHTRED_EX}Вызов инструмента "
                       f"'{tool_call['function']['name']}' "
                       f"с аргументами {tool_call['function']['arguments']}")
-                tool_result = execute_tool(tool_call=tool_call, tool_functions=tool_functions)
+                tool_result = execute_tool(tool_call=tool_call,
+                                           tool_functions=tool_functions,
+                                           workspace_dir=workspace_dir)
                 messages.append(
                     {
                         "role": "tool",

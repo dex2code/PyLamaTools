@@ -5,21 +5,17 @@ from pathlib import Path
 
 
 @logger.catch(reraise=False)
-def create_dir(
-    path: str,
-    directory: str
-) -> Dict[str, Any]:
+def create_dir(tool_path: str) -> Dict[str, Any]:
     """
     Создаёт новый каталог по указанному пути.
 
     Аргументы:
-        path (str): путь к родительской директории
-        dir_name (str): имя создаваемого каталога
+        tool_path (str): путь к создаваемому каталогу
 
     Возвращает:
         dict: {
             "success": bool,
-            "error": Union[None, str]  # Текст ошибки на русском языке
+            "error": Union[None, str]  # Текст ошибки
         }
     """
     result: dict[str, Any] = {
@@ -27,26 +23,25 @@ def create_dir(
         "error": None
     }
 
-    if not path or not directory:
+    if not tool_path:
         result["error"] = "Не указаны обязательные параметры вызова функции!"
         return result
 
     try:
-        base = Path(path).resolve()
-        directory_path = base / directory
+        directory_path = Path(tool_path).resolve()
         directory_path.mkdir(parents=True, exist_ok=False)
 
     except FileExistsError:
-        result['error'] = f"Каталог уже существует"
+        result['error'] = f"Каталог {directory_path} уже существует"
 
     except PermissionError:
-        result['error'] = f"Недостаточно прав для создания каталога"
+        result['error'] = f"Недостаточно прав для создания каталога {directory_path}"
 
     except TypeError:
         result['error'] = f"Некорректный тип аргументов (ожидаются строки)"
 
     except ValueError:
-        result['error'] = f"Некорректное значение аргумента (путь или имя)"
+        result['error'] = f"Некорректное значение аргумента"
 
     except OSError as e:
         result['error'] = f"Ошибка операционной системы: {e}"
@@ -63,20 +58,19 @@ create_dir.tool_description = {
     "type": "function",
     "function": {
         "name": "create_dir.create_dir",
-        "description": "Создаёт новый каталог в указанной директории. Возвращает словарь с полями: success (bool), error (строка или None)",
+        "description": "Создаёт новый каталог по указанному пути. "
+        "Путь может быть абсолютным или относительным. "
+        "Возвращает словарь с полями: success (bool), error (строка или None)",
         "parameters": {
             "type": "object",
             "properties": {
-                "path": {
+                "tool_path": {
                     "type": "string",
-                    "description": "Путь к директории, где нужно создать новый каталог (например, '/tmp' или './data')"
-                },
-                "directory": {
-                    "type": "string",
-                    "description": "Имя создаваемого каталога (например, 'NewFolder')"
+                    "description": "Путь до создаваемого каталога "
+                    "(например, '/tmp/new_dir' или './new_dir')"
                 }
             },
-            "required": ["path", "directory"],
+            "required": ["path"],
             "additionalProperties": False
         }
     }

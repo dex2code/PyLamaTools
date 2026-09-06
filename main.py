@@ -3,6 +3,7 @@ from config import settings
 from pathlib import Path
 from loguru import logger
 from helpers.validate_config import validate_config
+from helpers.init_workspace import init_workspace
 from helpers.load_tools import load_tools
 from helpers.load_system_prompt import load_system_prompt
 from helpers.get_ollama_client import get_ollama_client
@@ -18,7 +19,8 @@ import ollama
 def main(system_prompt: str,
          ollama_client: ollama.Client,
          tool_descriptions: List[Dict[str, Any]],
-         tool_functions: Dict[str, Any]) -> None:
+         tool_functions: Dict[str, Any],
+         workspace_dir: Path) -> None:
     welcome_msg = (
         f"✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
         f"инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
@@ -65,7 +67,8 @@ def main(system_prompt: str,
             messages = chat_model(messages=messages,
                                   ollama_client=ollama_client,
                                   tool_descriptions=tool_descriptions,
-                                  tool_functions=tool_functions)
+                                  tool_functions=tool_functions,
+                                  workspace_dir=workspace_dir)
         except Exception as e:
             logger.error(f"Ошибка взаимодействия с моделью: {e}")
             if messages and messages[-1]["role"] == "user":
@@ -84,10 +87,13 @@ if __name__ == "__main__":
         logger.critical(f"Ошибка валидации конфига приложения!")
         sys.exit(1)
 
-    # Фиксируем корень проекта
-    base_dir = Path(__file__).parent
-
     try:
+        # Фиксируем корень проекта
+        base_dir = Path(__file__).parent
+
+        # Пытаемся инициализировать workspace
+        workspace_dir = init_workspace(workspace_path=settings['workspace_dir'])
+
         # Получаем инструменты и их описания
         tools_functions, tool_descriptions = load_tools(settings=settings,
                                                         base_dir=base_dir)
@@ -105,8 +111,9 @@ if __name__ == "__main__":
     logger.info("Инициализация завершена!")
     print(f"\n{colorama.Fore.GREEN}✅ Инициализация завершена:")
     print(f"  🤖 {colorama.Style.DIM}Инструментов: {len(tool_descriptions)}")
-    print(f"  🤝 {colorama.Style.DIM}API: {settings['ollama_url']}")
-    print(f"  🧠 {colorama.Style.DIM}Модель: {settings['ollama_model']}")
+    print(f"  🛑 {colorama.Style.DIM}Песочница: '{workspace_dir}'")
+    print(f"  🤝 {colorama.Style.DIM}API: '{settings['ollama_url']}'")
+    print(f"  🧠 {colorama.Style.DIM}Модель: '{settings['ollama_model']}'")
     print(f"  💬 {colorama.Style.DIM}Системный промт (токенов): {count_tokens(system_prompt)}")
     print()
 
@@ -115,7 +122,8 @@ if __name__ == "__main__":
         main(system_prompt=system_prompt,
              ollama_client=ollama_client,
              tool_descriptions=tool_descriptions,
-             tool_functions=tools_functions)
+             tool_functions=tools_functions,
+             workspace_dir=workspace_dir)
     except KeyboardInterrupt:
         print()
         logger.warning("Выполнение прервано по KeyboardInterrupt Exception")

@@ -8,17 +8,15 @@ import fnmatch
 
 
 @logger.catch(reraise=False)
-def find_files_and_dirs(
-        directory: str,
-        pattern: str,
-        recursive: bool = True,
-        include_dirs: bool = False
-        ) -> Dict[str, Any]:
+def find_files_and_dirs(tool_path: str,
+                        pattern: str,
+                        recursive: bool = True,
+                        include_dirs: bool = False) -> Dict[str, Any]:
     """
     Ищет файлы и, опционально, каталоги по glob-шаблону в указанной директории.
 
     Args:
-        directory:      Путь к корневой папке (абсолютный или относительный).
+        tool_path:      Путь к папке, в которой ищем (абсолютный или относительный).
         pattern:        Glob-шаблон имени файла/каталога (например, "*.txt", "data_??.csv").
         recursive:      Если True, поиск выполняется во всех вложенных подпапках.
         include_dirs:   Если True, в результаты включаются каталоги, соответствующие шаблону.
@@ -35,27 +33,27 @@ def find_files_and_dirs(
             - count (int):              общее количество найденных объектов.
             - error (Optional[str]):    сообщение об ошибке, если success=False.
     """
-    base_root = Path(directory).resolve()
+    path_root = Path(tool_path).resolve()
 
-    if not base_root.exists():
+    if not path_root.exists():
         return {
             "success": False,
             "files": [],
             "count": 0,
-            "error": f"Директория '{directory}' не существует."
+            "error": f"Директория '{path_root}' не существует."
         }
-    if not base_root.is_dir():
+    if not path_root.is_dir():
         return {
             "success": False,
             "files": [],
             "count": 0,
-            "error": f"Путь '{directory}' не является директорией."
+            "error": f"Путь '{path_root}' не является директорией."
         }
 
     result_items: List[Dict[str, Any]] = []
 
     try:
-        for current_root, dirs, files in os.walk(base_root):
+        for current_root, dirs, files in os.walk(path_root):
             current_root_path = Path(current_root)
 
             # Обработка каталогов, если include_dirs=True
@@ -102,7 +100,7 @@ def find_files_and_dirs(
             "success": False,
             "files": [],
             "count": 0,
-            "error": f"Во время поиска файлов произошла ошибка: {str(e)}"
+            "error": f"Во время поиска файлов произошла ошибка: {e}"
         }
 
     return {
@@ -116,30 +114,44 @@ find_files_and_dirs.tool_description = {
     "type": "function",
     "function": {
         "name": "find_files_and_dirs.find_files_and_dirs",
-        "description": "Рекурсивно или не рекурсивно ищет файлы (и опционально каталоги) в заданной директории по glob-шаблону. Возвращает структурированный словарь с полями: success (bool), files (список найденных объектов с полями path, name, size_bytes, modified, is_dir), count (int), error (строка или null). Если поиск завершается с ошибкой, success=false и error содержит описание проблемы.",
+        "description": "Рекурсивно или не рекурсивно ищет файлы (и опционально каталоги) "
+        "в заданной директории по glob-шаблону. Возвращает структурированный словарь с полями: "
+        "success (bool), "
+        "files (список найденных объектов с полями path, name, size_bytes, modified, is_dir), "
+        "count (int), "
+        "error (строка или null). "
+        "Если поиск завершается с ошибкой, success=false и error содержит описание проблемы.",
         "parameters": {
             "type": "object",
             "properties": {
-                "directory": {
+                "tool_path": {
                     "type": "string",
-                    "description": "Путь к корневой папке для поиска (абсолютный или относительный). Должен существовать и быть директорией."
+                    "description": "Путь к папке для поиска (абсолютный или относительный). "
+                    "Должен существовать и быть директорией."
                 },
                 "pattern": {
                     "type": "string",
-                    "description": "Glob-шаблон имени файла/каталога. Поддерживаются символы *, ?, [..]. Примеры: '*.txt', 'data_??.csv', 'log[0-9].log'. Регистрозависимость определяется операционной системой."
+                    "description": "Glob-шаблон имени файла/каталога. "
+                    "Поддерживаются символы *, ?, [..]. "
+                    "Примеры: '*.txt', 'data_??.csv', 'log[0-9].log'. "
+                    "Регистрозависимость определяется операционной системой."
                 },
                 "recursive": {
                     "type": "boolean",
-                    "description": "Если True, поиск выполняется во всех вложенных подпапках рекурсивно. Если False, поиск ограничивается только указанной директорией. По умолчанию True.",
+                    "description": "Если True, поиск выполняется во всех вложенных подпапках "
+                    "рекурсивно. Если False, поиск ограничивается только указанной директорией. "
+                    "По умолчанию True.",
                     "default": True
                 },
                 "include_dirs": {
                     "type": "boolean",
-                    "description": "Если True, в результаты включаются каталоги, имена которых соответствуют шаблону (размер для них будет 0). Если False, возвращаются только файлы. По умолчанию False.",
+                    "description": "Если True, в результаты включаются каталоги, "
+                    "имена которых соответствуют шаблону (размер для них будет 0). "
+                    "Если False, возвращаются только файлы. По умолчанию False.",
                     "default": False
                 }
             },
-            "required": ["directory", "pattern"],
+            "required": ["path", "pattern"],
             "additionalProperties": False
         }
     }

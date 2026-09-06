@@ -5,16 +5,14 @@ from pathlib import Path
 
 
 @logger.catch(reraise=False)
-def read_file_content(
-        file_path: str,
-        encoding: str = 'utf-8',
-        max_bytes: Optional[int] = None
-) -> Dict[str, Any]:
+def read_file_content(tool_path: str,
+                      encoding: str = 'utf-8',
+                      max_bytes: Optional[int] = None) -> Dict[str, Any]:
     """
     Читает содержимое текстового файла с возможностью ограничения размера.
 
     Args:
-        file_path:  Путь к файлу (абсолютный или относительный).
+        tool_path:  Путь к файлу (абсолютный или относительный).
         encoding:   Кодировка файла (по умолчанию 'utf-8').
         max_bytes:  Максимальное количество байт для чтения (если None – читается весь файл).
 
@@ -26,23 +24,23 @@ def read_file_content(
             - size_bytes (int): Размер прочитанного содержимого в байтах.
             - error (Optional[str]): Описание ошибки (при success=False).
     """
-    path_obj = Path(file_path).resolve()
+    path_obj = Path(tool_path).resolve()
 
     if not path_obj.exists():
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
-            "error": f"Файл '{file_path}' не существует."
+            "error": f"Файл '{path_obj}' не существует."
         }
     if not path_obj.is_file():
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
-            "error": f"Путь '{file_path}' не является файлом."
+            "error": f"Путь '{path_obj}' не является файлом."
         }
 
     try:
@@ -51,7 +49,7 @@ def read_file_content(
     except FileNotFoundError:
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
             "error": f"Файл '{path_obj}' не найден (возможно, он был удален или перемещен)."
@@ -59,7 +57,7 @@ def read_file_content(
     except PermissionError:
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
             "error": f"Нет прав доступа для чтения файла '{path_obj}'."
@@ -67,15 +65,16 @@ def read_file_content(
     except UnicodeDecodeError as e:
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
-            "error": f"Ошибка декодирования файла '{path_obj}' (возможно, неверная кодировка или бинарный файл): {str(e)}"
+            "error": f"Ошибка декодирования файла '{path_obj}' "
+            f"(возможно, неверная кодировка или бинарный файл): {str(e)}"
         }
     except OSError as e:
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
             "error": f"Ошибка при чтении файла '{path_obj}': {str(e)}"
@@ -83,7 +82,7 @@ def read_file_content(
     except Exception as e:
         return {
             "success": False,
-            "file_path": file_path,
+            "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
             "error": f"Неизвестная ошибка при чтении файла '{path_obj}': {str(e)}"
@@ -91,7 +90,7 @@ def read_file_content(
 
     return {
         "success": True,
-        "file_path": file_path,
+        "file_path": f"{path_obj}",
         "content": content,
         "size_bytes": len(content.encode(encoding)),
         "error": None
@@ -101,11 +100,14 @@ read_file_content.tool_description = {
     "type": "function",
     "function": {
         "name": "read_file_content.read_file_content",
-        "description": "Читает содержимое текстового файла. Возвращает словарь с полями: success (bool), file_path (str), content (строка или None), size_bytes (int), error (строка или None). Поддерживает указание кодировки (по умолчанию utf-8) и ограничение на объём чтения (max_bytes).",
+        "description": "Читает содержимое текстового файла. "
+        "Возвращает словарь с полями: success (bool), file_path (str), content (строка или None), "
+        "size_bytes (int), error (строка или None). Поддерживает указание кодировки "
+        "(по умолчанию utf-8) и ограничение на объём чтения (max_bytes).",
         "parameters": {
             "type": "object",
             "properties": {
-                "file_path": {
+                "tool_path": {
                     "type": "string",
                     "description": "Путь к файлу (абсолютный или относительный)."
                 },
@@ -116,11 +118,12 @@ read_file_content.tool_description = {
                 },
                 "max_bytes": {
                     "type": "integer",
-                    "description": "Максимальное количество байт для чтения. Если не указано – читается весь файл.",
+                    "description": "Максимальное количество байт для чтения. "
+                    "Если не указано – читается весь файл.",
                     "minimum": 1
                 }
             },
-            "required": ["file_path"],
+            "required": ["tool_path"],
             "additionalProperties": False
         }
     }

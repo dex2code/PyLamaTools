@@ -5,16 +5,12 @@ from pathlib import Path
 
 
 @logger.catch(reraise=False)
-def touch_file(
-    directory: str,
-    filename: str
-) -> Dict[str, Any]:
+def touch_file(tool_path: str) -> Dict[str, Any]:
     """
     Создает пустой файл с именем filename в каталоге directory.
 
     Args:
-        directory:  Путь к каталогу (абсолютный или относительный).
-        filename:   Имя файла.
+        path:  Путь к файлу (абсолютный или относительный).
 
     Returns:
         Словарь с полями:
@@ -26,24 +22,22 @@ def touch_file(
         "error": None
     }
 
-    if not directory or not filename:
+    if not tool_path:
         result["error"] = "Не указаны обязательные параметры вызова функции!"
         return result
 
-
     try:
-        base = Path(directory).resolve()
-        file_path = base / filename
+        file_path = Path(tool_path).resolve()
         file_path.touch(exist_ok=False)
 
     except FileExistsError:
-        result["error"] = f"Файл '{filename}' уже существует в '{directory}'"
+        result["error"] = f"Файл '{file_path}' уже существует!"
 
     except FileNotFoundError:
-        result["error"] = f"Директория '{directory}' не найдена"
+        result["error"] = f"Путь к файлу '{file_path}' не существует!"
 
     except PermissionError:
-        result["error"] = f"Нет прав для записи в '{directory}'"
+        result["error"] = f"Нет прав для создания в '{file_path}'"
 
     except IsADirectoryError:
         result["error"] = f"'{file_path}' является директорией, а не файлом"
@@ -63,20 +57,18 @@ touch_file.tool_description = {
     "type": "function",
     "function": {
         "name": "touch_file.touch_file",
-        "description": "Создаёт пустой файл в указанной директории. Возвращает словарь с полями: success (bool), error (строка или None)",
+        "description": "Создаёт пустой файл по указанному пути. "
+        "Возвращает словарь с полями: success (bool), error (строка или None)",
         "parameters": {
             "type": "object",
             "properties": {
-                "directory": {
+                "tool_path": {
                     "type": "string",
-                    "description": "Путь к директории, где нужно создать файл (например, '/tmp' или './data')"
-                },
-                "filename": {
-                    "type": "string",
-                    "description": "Имя создаваемого файла (например, 'notes.txt')"
+                    "description": "Путь до создаваемого файла "
+                    "(например, '/tmp/new_file' или './data/new_file')"
                 }
             },
-            "required": ["directory", "filename"],
+            "required": ["path"],
             "additionalProperties": False
         }
     }

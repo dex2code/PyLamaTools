@@ -1,12 +1,15 @@
 from __future__ import annotations
 from loguru import logger
 from typing import Dict, Any
+from pathlib import Path
 import ollama
 import json
 
 
 @logger.catch(reraise=True)
-def execute_tool(tool_call: ollama.Message.ToolCall, tool_functions: Dict[str, Any]) -> str:
+def execute_tool(tool_call: ollama.Message.ToolCall,
+                 tool_functions: Dict[str, Any],
+                 workspace_dir: Path) -> str:
     """
     Выполняет вызов инструмента на основе данных от LLM.
 
@@ -53,7 +56,19 @@ def execute_tool(tool_call: ollama.Message.ToolCall, tool_functions: Dict[str, A
     if not isinstance(func_args, dict):
         err_msg = f"Ошибка: аргументы для {func_name} должны быть Dict"
         logger.error(err_msg)
-        return err_msg    
+        return err_msg
+
+    # Если в аргументах есть 'path' - проверяем на соответствие ограничения workspace_dir
+    if "tool_path" in func_args:
+        tool_path_str = func_args.get("tool_path", "")
+        try:
+            _ = Path(tool_path_str).resolve().relative_to(workspace_dir)
+        except ValueError:
+            err_msg = (f"Ошибка безопасности! "
+                       f"Инструмент '{func_name}' пытается выйти из песочницы! "
+                       f"Инструменты могут работать только в каталоге '{workspace_dir}'!")
+            logger.error(err_msg)
+            return err_msg
 
     # Вызываем функцию с аргументами
     func = tool_functions[func_name]
@@ -67,13 +82,14 @@ def execute_tool(tool_call: ollama.Message.ToolCall, tool_functions: Dict[str, A
     # Пробуем преобразовать результат в строку, если нужно
     if not isinstance(func_result, str):
         try:
-            func_result = json.dumps(func_result, ensure_ascii=False)
+            func_result_dump = json.dumps(func_result, ensure_ascii=False)
         except Exception as e:
-            logger.error(f"Неверный формат ответа инструмента '{func_name}'!")
+            logger.error(f"Неверный формат ответа инструмента '{func_name}': {func_result}. "
+                         f"Ошибка: {e}")
             return f"Неверный формат ответа инструмента '{func_name}'!"
 
     logger.debug(f" <- Out function execute_tool.execute_tool()")
-    return func_result
+    return func_result_dump
 
 
 if __name__ == "__main__":

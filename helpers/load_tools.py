@@ -8,9 +8,8 @@ import importlib
 
 
 @logger.catch(reraise=True)
-def load_tools(
-        settings: Dict[str, Any],
-        base_dir: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+def load_tools(settings: Dict[str, Any],
+               base_dir: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Загружает функции-инструменты из модулей в каталоге tools_dir.
 

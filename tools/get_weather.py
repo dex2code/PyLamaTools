@@ -31,8 +31,12 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
         r.raise_for_status()
         d = r.json()
         c = d.get("current_condition", [{}])[0]
-        t = c.get("FeelsLikeC", 0)
-        h = c.get("humidity", 0)
+        t = str(
+            c.get("FeelsLikeC", "0")
+        )
+        h = str(
+            c.get("humidity", "0")
+        )
     except Exception as e:
         return {
             "success": False,

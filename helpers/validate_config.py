@@ -8,6 +8,7 @@ class SettingsModel(BaseModel):
     """Модель конфигурации приложения"""
     log_level: str
     tools_dir: str
+    workspace_dir: str
     system_prompt_file: str
     system_prompt_file_enc: str
     ollama_url: str
