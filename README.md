@@ -324,7 +324,7 @@ def my_tool(tool_path: str, some_param: int = 42) -> Dict[str, Any]:
 
     Args:
         tool_path: Путь к объекту файловой системы.
-        param2: Описание (необязательный).
+        some_param: Описание (необязательный).
 
     Returns:
         Словарь с полями:
@@ -383,7 +383,7 @@ my_tool.tool_description = {
             "type": "object",
             "properties": {
                 "tool_path": {"type": "string", "description": "..."},
-                "param2": {"type": "integer", "description": "...", "default": 42}
+                "some_param": {"type": "integer", "description": "...", "default": 42}
             },
             "required": ["tool_path"],
             "additionalProperties": False

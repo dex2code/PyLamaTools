@@ -69,7 +69,7 @@ def read_file_content(tool_path: str,
             "content": None,
             "size_bytes": 0,
             "error": f"Ошибка декодирования файла '{path_obj}' "
-            f"(возможно, неверная кодировка или бинарный файл): {str(e)}"
+            f"(возможно, неверная кодировка или бинарный файл): {e}"
         }
     except OSError as e:
         return {
@@ -77,7 +77,7 @@ def read_file_content(tool_path: str,
             "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
-            "error": f"Ошибка при чтении файла '{path_obj}': {str(e)}"
+            "error": f"Ошибка при чтении файла '{path_obj}': {e}"
         }
     except Exception as e:
         return {
@@ -85,7 +85,7 @@ def read_file_content(tool_path: str,
             "file_path": f"{path_obj}",
             "content": None,
             "size_bytes": 0,
-            "error": f"Неизвестная ошибка при чтении файла '{path_obj}': {str(e)}"
+            "error": f"Неизвестная ошибка при чтении файла '{path_obj}': {e}"
         }
 
     return {
