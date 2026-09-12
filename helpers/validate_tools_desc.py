@@ -1,28 +1,26 @@
 from __future__ import annotations
-from pydantic import BaseModel, Field, ValidationError
-from typing import Optional, Dict, Any, List
+from pydantic import BaseModel, Field, ValidationError, ConfigDict
+from typing import Optional, Dict, Any, List, Literal
 from loguru import logger
 
 
 class ParameterProperty(BaseModel):
     """Свойство параметра функции (схема JSON Schema)."""
-    type: str
+    model_config = ConfigDict(extra="allow")
+    type: Literal["string", "number", "integer", "boolean", "array", "object"]
     description: str
-    default: Optional[Any] = None
+    default: Any = None
     enum: Optional[List[Any]] = None
     minimum: Optional[float] = None
     maximum: Optional[float] = None
-    class Config:
-        extra = 'allow'
 
 
 class Parameters(BaseModel):
-    type: str = Field(..., pattern=r'^object$')
+    model_config = ConfigDict(extra="allow")
+    type: Literal["object"] = "object"
     properties: Dict[str, ParameterProperty]
-    required: Optional[List[str]] = None
+    required: List[str] = []
     additionalProperties: bool = False
-    class Config:
-        extra = 'allow'
 
 
 class Function(BaseModel):
@@ -32,28 +30,24 @@ class Function(BaseModel):
 
 
 class Tool(BaseModel):
-    type: str = Field(..., pattern=r'^function$')
+    type: Literal["function"] = "function"
     function: Function
 
 
-@logger.catch(reraise=True)
 def validate_tool_desc(tool_dict: Dict[str, Any]) -> bool:
     """
-    Загружает и валидирует описание инструмента.
+    Валидирует описание инструмента по схеме Tool.
 
     Args:
-        tool_dict: Словарь, соответствующий схеме Tool.
+    tool_dict: Словарь, соответствующий схеме Tool.
 
     Returns:
         True при успехе, иначе False.
     """
     try:
         Tool.model_validate(tool_dict)
-    except ValidationError as e:
-        logger.error(f"Ошибка валидации описания инструмента! {e}")
-        return False
     except Exception as e:
-        logger.error(f"Неожиданная ошибка при валидации описания инструмента! {e}")
+        logger.error(f"Ошибка при валидации описания инструмента! {e}")
         return False
 
     return True

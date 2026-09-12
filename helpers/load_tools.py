@@ -3,18 +3,18 @@ from loguru import logger
 from helpers.validate_tools_desc import validate_tool_desc
 from typing import Dict, Any, List, Tuple
 from pathlib import Path
+from helpers.validate_config import SettingsModel
 import json
 import importlib
 
 
-@logger.catch(reraise=True)
-def load_tools(settings: Dict[str, Any],
+def load_tools(settings: SettingsModel,
                base_dir: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Загружает функции-инструменты из модулей в каталоге tools_dir.
 
     Args:
-        settings: Словарь с настройками, должен содержать ключ 'tools_dir'.
+        settings: Валидированная модель настроек (поле tools_dir).
         base_dir: Базовый путь, относительно которого ищется каталог инструментов.
 
     Returns:
@@ -25,12 +25,10 @@ def load_tools(settings: Dict[str, Any],
     Raises:
         FileNotFoundError: если каталог инструментов не существует.
     """
-    logger.debug(f" -> In function helpers.load_tools.load_tools()")
-
     # Собираем имена файлов *.py в каталоге утилит (settings['tools_dir'])
-    tools_path = base_dir / settings['tools_dir']
+    tools_path = base_dir / settings.tools_dir
     tools_dir = tools_path.name
-    if not tools_path.exists() or not tools_path.is_dir():
+    if not tools_path.is_dir():
         logger.error(f"Каталог инструментов '{tools_dir}' не найден")
         raise FileNotFoundError(f"Каталог инструментов '{tools_dir}' не найден")
 
@@ -54,7 +52,7 @@ def load_tools(settings: Dict[str, Any],
         try:
             module = importlib.import_module(f"{tools_dir}.{module_name}")
         except Exception as e:
-            logger.warning(f"Не могу импортировать модуль {tools_dir}.{module_name}: "
+            logger.error(f"Не могу импортировать модуль {tools_dir}.{module_name}: "
                            f"{e}")
             continue
 
@@ -87,15 +85,14 @@ def load_tools(settings: Dict[str, Any],
                 logger.info(f"Импортирована функция {module_attr} "
                             f"из модуля {tools_dir}.{module_name}")
 
-        if not tool_functions:
-            logger.warning("Не загружено ни одного инструмента! "
-                           "Работа с функциями будет недоступна.")
+    if not tool_functions:
+        logger.warning("Не загружено ни одного инструмента! "
+                        "Работа с функциями будет недоступна.")
 
-        logger.debug(f"Список функций: {tool_functions.keys()}")
-        logger.debug(f"Описания функций: \n"
-                     f"{json.dumps(tool_descriptions, indent=2, ensure_ascii=False)}")
+    logger.debug(f"Список функций: {tool_functions.keys()}")
+    logger.debug(f"Описания функций: \n"
+                    f"{json.dumps(tool_descriptions, indent=2, ensure_ascii=False)}")
 
-    logger.debug(f" <- Out function helpers.load_tools.load_tools()")
     return tool_functions, tool_descriptions
 
 

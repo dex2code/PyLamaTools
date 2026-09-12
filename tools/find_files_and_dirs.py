@@ -33,26 +33,36 @@ def find_files_and_dirs(tool_path: str,
             - count (int):              общее количество найденных объектов.
             - error (Optional[str]):    сообщение об ошибке, если success=False.
     """
-    path_root = Path(tool_path).resolve()
+    result = {
+        "success": False,
+        "files": [],
+        "count": 0,
+        "error": None
+    }
 
-    if not path_root.exists():
-        return {
-            "success": False,
-            "files": [],
-            "count": 0,
-            "error": f"Директория '{path_root}' не существует."
-        }
-    if not path_root.is_dir():
-        return {
-            "success": False,
-            "files": [],
-            "count": 0,
-            "error": f"Путь '{path_root}' не является директорией."
-        }
+    # Проверки полученных данных
+    if not isinstance(tool_path, str) or not tool_path.strip():
+        result['error'] = "tool_path должен быть непустой строкой"
+        return result
+    if not isinstance(pattern, str) or not pattern:
+        result['error'] = "pattern должен быть непустой строкой"
+        return result
+    if not isinstance(recursive, bool):
+        result['error'] = "recursive должен быть bool"
+        return result
+    if not isinstance(include_dirs, bool):
+        result['error'] = "include_dirs должен быть bool"
+        return result
 
+    path_root = None
     result_items: List[Dict[str, Any]] = []
-
     try:
+        path_root = Path(tool_path).resolve()
+
+        if not path_root.exists() or not path_root.is_dir():
+            result['error'] = f"Директория '{tool_path}' не существует или не является директорией."
+            return result
+
         for current_root, dirs, files in os.walk(path_root):
             current_root_path = Path(current_root)
 
@@ -84,7 +94,7 @@ def find_files_and_dirs(tool_path: str,
                     except Exception as e:
                         continue  # Пропускаем файл, если не удалось получить информацию о нем
                     result_items.append({
-                        "path": str(file_path.resolve()),
+                        "path": str(file_path),
                         "name": file_name,
                         "size_bytes": stat_info.st_size,
                         "modified": mtime,
@@ -96,19 +106,14 @@ def find_files_and_dirs(tool_path: str,
                 dirs.clear()
 
     except Exception as e:
-        return {
-            "success": False,
-            "files": [],
-            "count": 0,
-            "error": f"Во время поиска файлов произошла ошибка: {e}"
-        }
+        result['error'] = f"Во время поиска файлов произошла ошибка: {e}"
 
-    return {
-        "success": True,
-        "files": result_items,
-        "count": len(result_items),
-        "error": None
-    }
+    else: 
+        result['success'] = True
+        result['files'] = result_items
+        result['count'] = len(result_items)
+
+    return result
 
 find_files_and_dirs.tool_description = {
     "type": "function",
@@ -151,12 +156,41 @@ find_files_and_dirs.tool_description = {
                     "default": False
                 }
             },
-            "required": ["path", "pattern"],
+            "required": ["tool_path", "pattern"],
             "additionalProperties": False
         }
     }
 }
 
 
-if __name__ == '__main__':
-    pass
+if __name__ == "__main__":
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        (base / "a.txt").write_text("a")
+        (base / "sub").mkdir()
+        (base / "sub" / "c.txt").write_text("cc")
+        (base / "sub" / "deep").mkdir()
+        (base / "sub" / "deep" / "d.txt").write_text("ddd")
+
+        r = find_files_and_dirs(str(base), "*.txt")
+        assert r["success"] is True and r["count"] == 3
+        assert isinstance(r["files"], list)
+        assert {i["name"] for i in r["files"]} == {"a.txt", "c.txt", "d.txt"}
+        assert all(i["is_dir"] is False for i in r["files"])
+
+        assert find_files_and_dirs(str(base), "*.txt", recursive=False)["count"] == 1
+
+        r = find_files_and_dirs(str(base), "sub", include_dirs=True, recursive=False)
+        assert r["count"] == 1 and r["files"][0]["is_dir"] is True
+
+        assert find_files_and_dirs(str(base), "nope*")["count"] == 0
+
+        assert find_files_and_dirs("", "*")["success"] is False
+        assert find_files_and_dirs(str(base), "")["success"] is False
+        assert find_files_and_dirs(str(base / "nope"), "*")["success"] is False
+        assert find_files_and_dirs(str(base / "a.txt"), "*")["success"] is False
+
+    print("find_files_and_dirs: OK")

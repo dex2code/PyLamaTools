@@ -1,47 +1,39 @@
 from __future__ import annotations
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, ValidationError
-from loguru import logger
+from typing import Optional, Dict, Any, Literal
+from pydantic import BaseModel, ConfigDict, Field, AnyHttpUrl
 
 
 class SettingsModel(BaseModel):
-    """Модель конфигурации приложения"""
-    log_level: str
-    tools_dir: str
-    workspace_dir: str
-    system_prompt_file: str
-    system_prompt_file_enc: str
-    ollama_url: str
-    ollama_model: str
-    tool_iterations: int
-    context_max_tokens: int
-    context_encoding: str
+    model_config = ConfigDict(extra="forbid")
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    tools_dir: str = Field(min_length=1)
+    workspace_dir: str = Field(min_length=1)
+    system_prompt_file: str = Field(min_length=1)
+    system_prompt_file_encoding: str = Field(min_length=1)
+    ollama_url: AnyHttpUrl
+    ollama_model: str = Field(min_length=1)
+    tool_iterations: int = Field(ge=1)
+    context_max_tokens: int = Field(ge=0)
+    context_encoding: Literal["cl100k_base", "o200k_base"]
     display_thinking: bool
     model_thinking: bool
-    options: Optional[Dict] = None
+    options: Optional[Dict[str, Any]] = None
 
 
-@logger.catch(reraise=True)
-def validate_config(config: Dict[str, Any]) -> bool:
+def validate_config(config: Dict[str, Any]) -> SettingsModel:
     """
-    Проверяет, что переданный словарь соответствует схеме SettingsModel.
+    Валидирует конфиг и возвращает нормализованную модель.
 
     Args:
         config: Словарь с настройками.
 
     Returns:
-        True, если конфигурация валидна, иначе False.
-    """
-    try:
-        SettingsModel.model_validate(config)
-    except ValidationError as e:
-        logger.error(f"Ошибка валидации конфигурационного файла! {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Неожиданная ошибка при валидации конфигурационного файла! {e}")
-        return False
+        SettingsModel: Валидированная модель.
 
-    return True
+    Raises:
+        ValidationError: если конфиг не соответствует схеме.
+    """
+    return SettingsModel.model_validate(config)
 
 
 if __name__ == "__main__":

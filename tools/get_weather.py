@@ -19,7 +19,7 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
     Returns:
         Словарь с полями:
             - success (bool):       True, если поиск выполнен без критических ошибок.
-            - Error (str):          Содержит текст ошибки, если success False
+            - error (str):          Содержит текст ошибки, если success False
             - temperature (str):    Температура по Цельсию.
             - humidity (str):       Относительная влажность воздуха.
     """
@@ -30,7 +30,8 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
         r = requests.get(wttr_url, timeout=timeout, proxies=proxies)
         r.raise_for_status()
         d = r.json()
-        c = d.get("current_condition", [{}])[0]
+        conditions = d.get("current_condition") or [{}]
+        c = conditions[0] if conditions else {}
         t = str(
             c.get("FeelsLikeC", "0")
         )
@@ -58,10 +59,17 @@ get_weather.tool_description = {
     "type": "function",
     "function": {
         "name": "get_weather.get_weather",
-        "description": "Возвращает погоду относительно местоположения клиента (геолокация вычисляется по IP-адресу клиента). Возвращает структурированный словарь с полями: success (bool), error (str), tenperature (str), humidity (str). Если запрос завершается с ошибкой, success=false и error содержит описание проблемы.",
+        "description": "Возвращает погоду относительно местоположения клиента (геолокация вычисляется по IP-адресу клиента). Возвращает структурированный словарь с полями: success (bool), error (str), temperature (str), humidity (str). Если запрос завершается с ошибкой, success=false и error содержит описание проблемы.",
         "parameters": {
             "type": "object",
-            "properties": {},
+            "properties": {
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 60,
+                    "description": "Таймаут запроса в секундах (по умолчанию 10)"
+                }
+            },
             "required": [],
             "additionalProperties": False
         }

@@ -1,34 +1,33 @@
 from __future__ import annotations
 from loguru import logger
 from pathlib import Path
+import tempfile
 
 
-@logger.catch(reraise=True)
-def init_workspace(workspace_path: str = "workspace") -> Path:
+def init_workspace(workspace_path: Path) -> Path:
     """
     Подготавливает рабочую директорию.
     Возвращает абсолютный Path к существующей и доступной для записи директории.
-    При ошибках выбрасывает PermissionError, NotADirectoryError, OSError.
+    При ошибках выбрасывает исключения OS.
     """
-    logger.debug(" -> In function workspace.init_workspace()")
+    # Базовая проверка пути
+    if not str(workspace_path).strip():
+        raise ValueError("workspace_path не может быть пустым")
 
-    # Разрешаем абсолютный путь до workspace
-    target = Path(workspace_path).resolve()
+    # Нормализуем путь и делаем его абсолютным (если он ещё не абсолютный)
+    target = workspace_path.resolve()
 
     # Если не существует - пытаемся создать
-    if not target.exists():
-        target.mkdir(parents=True, exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
 
     # Если уже существует, но не каталог - выбрасываем исключение
     if not target.is_dir():
         raise NotADirectoryError(f"Каталог '{target}' уже существует и не является директорией!")
 
     # Проверяем доступ на запись созданием временного файла
-    test_file = target / ".write_test"
-    test_file.touch(exist_ok=True)
-    test_file.unlink()
+    with tempfile.NamedTemporaryFile(dir=target, delete=True):
+        pass
 
-    logger.debug(" <- Out function workspace.init_workspace()")
     return target
 
 
