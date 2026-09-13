@@ -8,6 +8,7 @@ import json
 
 def execute_tool(tool_call: ollama.Message.ToolCall,
                  tool_functions: Dict[str, Any],
+                 base_dir: Path,
                  workspace_dir: Path) -> str:
     """
     Выполняет вызов инструмента на основе данных от LLM.
@@ -25,12 +26,12 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
     # Проверяем наличие объекта "function" в tool_call
     func_info = getattr(tool_call, "function", None)
     if func_info is None:
-        err_msg = f"Ошибка: в tool_call отсутствует объект 'function'"
+        err_msg = "Ошибка: в tool_call отсутствует объект 'function'"
         logger.error(err_msg)
         return err_msg
 
     # Получаем значение name вызываемой функции из объекта function и проверяем валидность
-    func_name = func_info.name
+    func_name = getattr(func_info, "name", None)
     if not isinstance(func_name, str) or not func_name:
         err_msg = "Ошибка: в объекте 'function' отсутствует корректное имя функции 'name'"
         logger.error(err_msg)
@@ -47,9 +48,9 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
     if isinstance(func_args, str):
         try:
             func_args = json.loads(func_args)
-        except Exception as e:
-            err_msg = f"Ошибка: неверный формат аргументов для {func_name}: {func_args} ({e})"
-            logger.error(err_msg)
+        except Exception:
+            err_msg = f"Ошибка: неверный формат аргументов для {func_name}: {func_args}"
+            logger.exception(err_msg)
             return err_msg
 
     if not isinstance(func_args, dict):
@@ -59,28 +60,42 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
 
     # Если в аргументах есть 'tool_path' - проверяем на соответствие ограничения workspace_dir
     if "tool_path" in func_args:
-        tool_path_str = func_args['tool_path']
-        if not isinstance(tool_path_str, str) or not tool_path_str:
+        tool_path_raw = func_args['tool_path']
+        # Проверяем, что tool_path непустая строка
+        if not isinstance(tool_path_raw, str) or not tool_path_raw:
             err_msg = f"Ошибка: 'tool_path' для '{func_name}' должен быть непустой строкой"
             logger.error(err_msg)
             return err_msg
+
+        # Приводим workspace_dir к абсолютному пути
         workspace_resolved = workspace_dir.resolve()
+
+        # Приводим tool_path к абсолютному пути относительно base_dir
+        tool_path = Path(tool_path_raw)
+        if not tool_path.is_absolute():
+            tool_path = base_dir / tool_path
+
         try:
-            _ = Path(tool_path_str).resolve().relative_to(workspace_resolved)
-        except ValueError:
+            tool_path_resolved = tool_path.resolve()
+            tool_path_resolved.relative_to(workspace_resolved)
+        except (ValueError, OSError):
             err_msg = (f"Ошибка безопасности! "
                        f"Инструмент '{func_name}' пытается выйти из песочницы! "
                        f"Инструменты могут работать только в каталоге '{workspace_dir}'!")
-            logger.error(err_msg)
+            logger.exception(err_msg)
             return err_msg
 
+        func_args['tool_path'] = str(tool_path_resolved)
+
     # Вызываем функцию с аргументами
-    func = tool_functions[func_name]
     try:
+        func = tool_functions[func_name]
+        if not callable(func):
+            return f"Ошибка: '{func_name}' не является вызываемым объектом"
         func_result = func(**func_args)
-    except Exception as e:
-        err_msg = f"Ошибка при вызове инструмента '{func_name}': {e}"
-        logger.error(err_msg)
+    except Exception:
+        err_msg = f"Ошибка при вызове инструмента '{func_name}'"
+        logger.exception(err_msg)
         return err_msg
 
     # Пробуем преобразовать результат в строку, если нужно
@@ -89,10 +104,6 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
 
     try:
         return json.dumps(func_result, ensure_ascii=False)
-    except Exception as e:
-        logger.error(f"Неверный формат ответа инструмента '{func_name}': {func_result} ({e})")
+    except Exception:
+        logger.exception(f"Неверный формат ответа инструмента '{func_name}': {func_result}")
         return f"Неверный формат ответа инструмента '{func_name}'!"
-
-
-if __name__ == "__main__":
-    pass

@@ -20,6 +20,7 @@ def main(settings: SettingsModel,
          ollama_client: ollama.Client,
          tool_descriptions: List[Dict[str, Any]],
          tool_functions: Dict[str, Any],
+         base_dir: Path,
          workspace_dir: Path) -> None:
     welcome_msg = (
         "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
@@ -70,6 +71,7 @@ def main(settings: SettingsModel,
                                   ollama_client=ollama_client,
                                   tool_descriptions=tool_descriptions,
                                   tool_functions=tool_functions,
+                                  base_dir=base_dir,
                                   workspace_dir=workspace_dir)
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
@@ -135,6 +137,7 @@ if __name__ == "__main__":
              ollama_client=ollama_client,
              tool_descriptions=tool_descriptions,
              tool_functions=tools_functions,
+             base_dir=base_dir,
              workspace_dir=workspace_dir)
     except KeyboardInterrupt:
         print()

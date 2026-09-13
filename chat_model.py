@@ -15,6 +15,7 @@ def chat_model(settings: SettingsModel,
                ollama_client: ollama.Client,
                tool_descriptions: List[Dict[str, Any]],
                tool_functions: Dict[str, Any],
+               base_dir: Path,
                workspace_dir: Path) -> List[Dict[str, Any]]:
     assistant_nick = f"🤖 {colorama.Fore.CYAN}{settings.ollama_model}{colorama.Fore.WHITE}"
 
@@ -62,7 +63,12 @@ def chat_model(settings: SettingsModel,
                       f"с аргументами {tool_call.function.arguments}")
                 tool_result = execute_tool(tool_call=tool_call,
                                            tool_functions=tool_functions,
+                                           base_dir=base_dir,
                                            workspace_dir=workspace_dir)
+                print(f"↩️  {colorama.Fore.LIGHTCYAN_EX}"
+                      f"инструмент '{tool_call.function.name}' вернул значение: "
+                      f" {tool_result}"
+                )
                 messages.append(
                     {
                         "role": "tool",
