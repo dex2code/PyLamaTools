@@ -7,7 +7,7 @@ settings = {
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "qwen3.5:9b-mlx",
     "tool_iterations": 16,
-    "context_max_tokens": 0,
+    "context_max_tokens": 65536,
     "context_encoding": "cl100k_base",
     "display_thinking": True,
     "model_thinking": True,

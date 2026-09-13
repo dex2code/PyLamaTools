@@ -123,11 +123,31 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print(f"\n{colorama.Fore.GREEN}✅ Инициализация завершена:")
-    print(f"  🤖 {colorama.Style.DIM}Инструментов: {len(tool_descriptions)}")
-    print(f"  🛑 {colorama.Style.DIM}Песочница: '{workspace_dir}'")
-    print(f"  🤝 {colorama.Style.DIM}API: '{settings.ollama_url}'")
-    print(f"  🧠 {colorama.Style.DIM}Модель: '{settings.ollama_model}'")
-    print(f"  💬 {colorama.Style.DIM}Системный промт (токенов): {system_prompt_tokens}")
+
+    print(f"  🤖 {colorama.Style.DIM}"
+          f"Инструментов: {len(tool_descriptions)}"
+          f"{colorama.Style.RESET_ALL}")
+
+    print(f"  🛑 {colorama.Style.DIM}"
+          f"Песочница: '{workspace_dir}'"
+          f"{colorama.Style.RESET_ALL}")
+
+    print(f"  🤝 {colorama.Style.DIM}"
+          f"API: '{settings.ollama_url}'"
+          f"{colorama.Style.RESET_ALL}")
+
+    print(f"  🧠 {colorama.Style.DIM}"
+          f"Модель: '{settings.ollama_model}'"
+          f"{colorama.Style.RESET_ALL}")
+
+    print(f"  📋 {colorama.Style.DIM}"
+          f"Ограничение контекста (токенов): {settings.context_max_tokens or '♾️'}"
+          f"{colorama.Style.RESET_ALL}")
+
+    print(f"  💬 {colorama.Style.DIM}"
+          f"Системный промт (токенов): {system_prompt_tokens}"
+          f"{colorama.Style.RESET_ALL}")
+
     print()
 
     # Исполняем главную функцию с отслеживанием Ctrl+C
