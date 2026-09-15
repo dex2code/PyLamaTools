@@ -1,10 +1,8 @@
 from __future__ import annotations
-from loguru import logger
 from typing import Dict, Any
 from pathlib import Path
 
 
-@logger.catch(reraise=False)
 def touch_file(tool_path: str) -> Dict[str, Any]:
     """
     Создает пустой файл по пути tool_path.
@@ -65,7 +63,7 @@ def touch_file(tool_path: str) -> Dict[str, Any]:
 touch_file.tool_description = {
     "type": "function",
     "function": {
-        "name": "touch_file.touch_file",
+        "name": "tools.touch_file.touch_file",
         "description": (
             "Создаёт ПУСТОЙ файл по указанному пути. "
             "Родительские каталоги создаются автоматически при необходимости. "

@@ -1,11 +1,9 @@
 from __future__ import annotations
-from loguru import logger
 from typing import Dict, Optional, Any
 from pathlib import Path
 import codecs
 
 
-@logger.catch(reraise=False)
 def read_file_content(tool_path: str,
                       encoding: str = 'utf-8',
                       max_chars: Optional[int] = None) -> Dict[str, Any]:
@@ -95,7 +93,7 @@ def read_file_content(tool_path: str,
 read_file_content.tool_description = {
     "type": "function",
     "function": {
-        "name": "read_file_content.read_file_content",
+        "name": "tools.read_file_content.read_file_content",
         "description": "Читает содержимое текстового файла. "
         "Возвращает словарь с полями: success (bool), file_path (str), content (строка или None), "
         "size_chars (int), error (строка или None). Поддерживает указание кодировки "

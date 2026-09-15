@@ -1,10 +1,8 @@
 from __future__ import annotations
-from loguru import logger
 from typing import Dict, Any
 from pathlib import Path
 
 
-@logger.catch(reraise=False)
 def create_dir(tool_path: str) -> Dict[str, Any]:
     """
     Создаёт новый каталог по указанному пути.
@@ -59,7 +57,7 @@ def create_dir(tool_path: str) -> Dict[str, Any]:
 create_dir.tool_description = {
     "type": "function",
     "function": {
-        "name": "create_dir.create_dir",
+        "name": "tools.create_dir.create_dir",
         "description": "Создаёт новый каталог по указанному пути. "
         "Путь может быть абсолютным или относительным. "
         "Возвращает словарь с полями: success (bool), error (строка или None)",

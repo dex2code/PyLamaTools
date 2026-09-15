@@ -1,18 +1,22 @@
 from __future__ import annotations
-from config import settings as raw_settings
-from pathlib import Path
-from loguru import logger
-from helpers.validate_config import validate_config, SettingsModel
-from helpers.init_workspace import init_workspace
-from helpers.load_tools import load_tools
-from helpers.load_system_prompt import load_system_prompt
-from helpers.get_ollama_client import get_ollama_client
-from chat_model import chat_model
-from helpers.cut_messages import count_tokens
-from typing import List, Dict, Any
-import colorama
+
+import copy
 import sys
+from pathlib import Path
+from typing import Any, Dict, List
+
+import colorama
 import ollama
+from loguru import logger
+
+from chat_model import chat_model
+from config import settings as raw_settings
+from helpers.cut_messages import count_tokens
+from helpers.get_ollama_client import get_ollama_client
+from helpers.init_workspace import init_workspace
+from helpers.load_system_prompt import load_system_prompt
+from helpers.load_tools import load_tools
+from helpers.validate_config import SettingsModel, validate_config
 
 
 def main(settings: SettingsModel,
@@ -20,7 +24,7 @@ def main(settings: SettingsModel,
          ollama_client: ollama.Client,
          tool_descriptions: List[Dict[str, Any]],
          tool_functions: Dict[str, Any],
-         base_dir: Path,
+         project_root: Path,
          workspace_dir: Path) -> None:
     welcome_msg = (
         "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
@@ -45,7 +49,7 @@ def main(settings: SettingsModel,
     # Входим в цикл чата
     while True:
         try:
-            user_input = input(f"\n👤 {colorama.Fore.YELLOW}Вы{colorama.Fore.WHITE}: ")
+            user_input = input(f"\n👤 {colorama.Fore.YELLOW}Вы{colorama.Style.RESET_ALL}: ")
         except EOFError:
             break
 
@@ -55,7 +59,8 @@ def main(settings: SettingsModel,
         if not user_input:
             continue
 
-        messages_before = list(messages)
+        # Делаем копию контекста для восстановления, если что-то пошло не так
+        messages_before = copy.deepcopy(messages)
         try:
             # Добавляем в контекст вопрос пользователя
             messages.append(
@@ -65,14 +70,17 @@ def main(settings: SettingsModel,
                 }
             )
 
-            # Вызываем обработчик чата
-            messages = chat_model(settings=settings,
-                                  messages=messages,
-                                  ollama_client=ollama_client,
-                                  tool_descriptions=tool_descriptions,
-                                  tool_functions=tool_functions,
-                                  base_dir=base_dir,
-                                  workspace_dir=workspace_dir)
+            # В зависимости от флага streaming вызываем тот или иной обработчик чата
+            if settings.model_streaming:
+                raise NotImplementedError("Streaming-режим пока не реализован")
+            else:
+                messages = chat_model(settings=settings,
+                                      messages=messages,
+                                      ollama_client=ollama_client,
+                                      tool_descriptions=tool_descriptions,
+                                      tool_functions=tool_functions,
+                                      project_root=project_root,
+                                      workspace_dir=workspace_dir)
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
             messages = messages_before
@@ -86,7 +94,7 @@ if __name__ == "__main__":
 
     # Валидируем конфиг
     try:
-        settings = validate_config(raw_settings)
+        settings = validate_config(raw_settings=raw_settings)
     except Exception:
         logger.exception("Ошибка валидации конфига!")
         sys.exit(1)
@@ -94,32 +102,32 @@ if __name__ == "__main__":
     logger.remove()
     logger.add(sys.stderr, level=settings.log_level)
 
+    init_stage = "init_workspace"
     try:
         # Фиксируем корень проекта
-        base_dir = Path(__file__).resolve().parent
+        project_root = Path(__file__).resolve().parent
 
         # Пытаемся инициализировать workspace
-        workspace_path = Path(settings.workspace_dir)
-        if not workspace_path.is_absolute():
-            workspace_path = base_dir / workspace_path
-        workspace_dir = init_workspace(workspace_path=workspace_path)
-
+        workspace_dir = init_workspace(project_root=project_root,
+                                       workspace_dir=Path(settings.workspace_dir))
+        init_stage = "load_tools"
         # Получаем инструменты и их описания
         tools_functions, tool_descriptions = load_tools(settings=settings,
-                                                        base_dir=base_dir)
+                                                        project_root=project_root)
 
+        init_stage = "load_system_prompt"
         # Загружаем системный промт
         system_prompt = load_system_prompt(settings=settings,
-                                           base_dir=base_dir)
-        if not system_prompt:
-            raise ValueError("Ошибка загрузки системного промта - пустая строка!")
+                                           project_root=project_root)
+        init_stage = "count_tokens"
         system_prompt_tokens = count_tokens(text=system_prompt,
                                             encoding_name=settings.context_encoding)
 
+        init_stage = "get_ollama_client"
         # Подключаемся к Ollama API и получаем клиента
         ollama_client = get_ollama_client(settings=settings)
     except Exception:
-        logger.exception("Ошибка инициализации окружения!")
+        logger.exception("Ошибка инициализации окружения (этап {})", init_stage)
         sys.exit(1)
 
     print(f"\n{colorama.Fore.GREEN}✅ Инициализация завершена:")
@@ -157,13 +165,11 @@ if __name__ == "__main__":
              ollama_client=ollama_client,
              tool_descriptions=tool_descriptions,
              tool_functions=tools_functions,
-             base_dir=base_dir,
+             project_root=project_root,
              workspace_dir=workspace_dir)
     except KeyboardInterrupt:
-        print()
         logger.warning("Выполнение прервано по KeyboardInterrupt")
         sys.exit(130)
     except Exception:
-        print()
         logger.exception("Неожиданная ошибка!")
         sys.exit(1)

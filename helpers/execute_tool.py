@@ -8,7 +8,7 @@ import json
 
 def execute_tool(tool_call: ollama.Message.ToolCall,
                  tool_functions: Dict[str, Any],
-                 base_dir: Path,
+                 project_root: Path,
                  workspace_dir: Path) -> str:
     """
     Выполняет вызов инструмента на основе данных от LLM.
@@ -70,10 +70,10 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
         # Приводим workspace_dir к абсолютному пути
         workspace_resolved = workspace_dir.resolve()
 
-        # Приводим tool_path к абсолютному пути относительно base_dir
+        # Приводим tool_path к абсолютному пути относительно project_root
         tool_path = Path(tool_path_raw)
         if not tool_path.is_absolute():
-            tool_path = base_dir / tool_path
+            tool_path = project_root / tool_path
 
         try:
             tool_path_resolved = tool_path.resolve()
@@ -82,7 +82,7 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
             err_msg = (f"Ошибка безопасности! "
                        f"Инструмент '{func_name}' пытается выйти из песочницы! "
                        f"Инструменты могут работать только в каталоге '{workspace_dir}'!")
-            logger.exception(err_msg)
+            logger.error(err_msg)
             return err_msg
 
         func_args['tool_path'] = str(tool_path_resolved)
@@ -93,8 +93,8 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
         if not callable(func):
             return f"Ошибка: '{func_name}' не является вызываемым объектом"
         func_result = func(**func_args)
-    except Exception:
-        err_msg = f"Ошибка при вызове инструмента '{func_name}'"
+    except Exception as e:
+        err_msg = f"Ошибка при вызове инструмента '{func_name}': {type(e).__name__}: {e}"
         logger.exception(err_msg)
         return err_msg
 

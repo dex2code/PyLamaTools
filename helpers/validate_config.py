@@ -17,10 +17,11 @@ class SettingsModel(BaseModel):
     context_encoding: Literal["cl100k_base", "o200k_base"]
     display_thinking: bool
     model_thinking: bool
+    model_streaming: bool
     options: Optional[Dict[str, Any]] = None
 
 
-def validate_config(config: Dict[str, Any]) -> SettingsModel:
+def validate_config(raw_settings: Dict[str, Any]) -> SettingsModel:
     """
     Валидирует конфиг и возвращает нормализованную модель.
 
@@ -33,7 +34,7 @@ def validate_config(config: Dict[str, Any]) -> SettingsModel:
     Raises:
         ValidationError: если конфиг не соответствует схеме.
     """
-    return SettingsModel.model_validate(config)
+    return SettingsModel.model_validate(raw_settings)
 
 
 if __name__ == "__main__":

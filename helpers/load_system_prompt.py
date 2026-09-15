@@ -1,17 +1,19 @@
 from __future__ import annotations
-from loguru import logger
 from pathlib import Path
+
+from loguru import logger
+
 from helpers.validate_config import SettingsModel
 
 
 def load_system_prompt(settings: SettingsModel,
-                       base_dir: Path) -> str:
+                       project_root: Path) -> str:
     """
     Загружает системный промт из файла.
 
     Args:
         settings: Валидированная модель настроек.
-        base_dir: Базовый путь проекта.
+        project_root: Базовый путь проекта.
 
     Returns:
         Содержимое файла без пробелов по краям.
@@ -19,21 +21,25 @@ def load_system_prompt(settings: SettingsModel,
     Raises:
         OSError: если файл не удаётся прочитать.
         UnicodeDecodeError: если кодировка не подходит.
+        ValueError: если путь выходит за пределы project_root.
     """
+    resolved_root = project_root.resolve()
+    prompt_file = (resolved_root / settings.system_prompt_file).resolve()
+    if not prompt_file.is_relative_to(resolved_root):
+        logger.error("Файл промта вне project_root: {}", prompt_file)
+        raise ValueError(f"Файл промта вне project_root: {prompt_file}")
 
-    prompt_file = base_dir / settings.system_prompt_file
     try:
-        with open(prompt_file,
-                  "r",
-                  encoding=settings.system_prompt_file_encoding) as f:
-            system_prompt = f.read()
+        system_prompt = prompt_file.read_text(
+            encoding=settings.system_prompt_file_encoding
+        ).strip()
     except (OSError, UnicodeDecodeError):
-        logger.exception(f"Системный промт не загружен: '{prompt_file}'")
+        logger.exception("Системный промт не загружен: {}", prompt_file)
         raise
 
-    logger.debug(f"Системный промт загружен ({len(system_prompt)} символов)")
-    return system_prompt.strip()
+    if not system_prompt:
+        logger.warning("Системный промт пуст")
+    else:
+        logger.debug("Системный промт загружен ({} символов)", len(system_prompt))
 
-
-if __name__ == "__main__":
-    pass
+    return system_prompt

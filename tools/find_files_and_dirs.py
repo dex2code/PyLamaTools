@@ -1,5 +1,4 @@
 from __future__ import annotations
-from loguru import logger
 from typing import Dict, Any, List
 from pathlib import Path
 from datetime import datetime
@@ -7,7 +6,6 @@ import os
 import fnmatch
 
 
-@logger.catch(reraise=False)
 def find_files_and_dirs(tool_path: str,
                         pattern: str,
                         recursive: bool = True,
@@ -118,7 +116,7 @@ def find_files_and_dirs(tool_path: str,
 find_files_and_dirs.tool_description = {
     "type": "function",
     "function": {
-        "name": "find_files_and_dirs.find_files_and_dirs",
+        "name": "tools.find_files_and_dirs.find_files_and_dirs",
         "description": "Рекурсивно или не рекурсивно ищет файлы (и опционально каталоги) "
         "в заданной директории по glob-шаблону. Возвращает структурированный словарь с полями: "
         "success (bool), "

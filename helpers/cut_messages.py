@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import List, Dict, Any
 
 import puretiktoken
+import copy
 
 
 # Эмпирическая надбавка на chat-шаблон одного сообщения
@@ -74,7 +75,7 @@ def truncate_by_tokens(messages: List[Dict[str, Any]],
     if not max_tokens or not messages:
         return messages
 
-    truncated = list(messages)
+    truncated = copy.deepcopy(messages)
 
     has_system = truncated[0].get("role") == "system"
     head_size = 1 if has_system else 0

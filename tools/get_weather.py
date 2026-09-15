@@ -1,14 +1,14 @@
 from __future__ import annotations
 from typing import Dict, Any
-from loguru import logger
 import requests
+
 
 proxies = {
     "http": "http://127.0.0.1:10808",
     "https": "http://127.0.0.1:10808"
 }
 
-@logger.catch(reraise=False)
+
 def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
     """
     Возвращает погоду относительно IP-адреса клиента.
@@ -23,7 +23,6 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
             - temperature (str):    Температура по Цельсию.
             - humidity (str):       Относительная влажность воздуха.
     """
-    logger.debug(" -> In function get_weather.get_weather()")
     wttr_url = "https://wttr.in/?format=j1"
 
     try:
@@ -46,7 +45,6 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
             "humidity": None
         }
 
-    logger.debug(" <- Out function get_weather.get_weather()")
     return {
         "success": True,
         "error": "",
@@ -58,7 +56,7 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
 get_weather.tool_description = {
     "type": "function",
     "function": {
-        "name": "get_weather.get_weather",
+        "name": "tools.get_weather.get_weather",
         "description": "Возвращает погоду относительно местоположения клиента (геолокация вычисляется по IP-адресу клиента). Возвращает структурированный словарь с полями: success (bool), error (str), temperature (str), humidity (str). Если запрос завершается с ошибкой, success=false и error содержит описание проблемы.",
         "parameters": {
             "type": "object",
@@ -75,7 +73,3 @@ get_weather.tool_description = {
         }
     }
 }
-
-
-if __name__ == '__main__':
-    pass

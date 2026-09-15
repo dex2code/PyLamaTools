@@ -11,6 +11,7 @@ settings = {
     "context_encoding": "cl100k_base",
     "display_thinking": True,
     "model_thinking": True,
+    "model_streaming": False,
     "options": {
         "temperature": 1,
         "top_k": 20,

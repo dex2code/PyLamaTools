@@ -40,7 +40,3 @@ def get_ollama_client(settings: SettingsModel) -> ollama.Client:
                 f"и выбрали модель {settings.ollama_model}")
 
     return ollama_client
-
-
-if __name__ == "__main__":
-    pass

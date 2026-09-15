@@ -1,11 +1,9 @@
 from __future__ import annotations
-from loguru import logger
 from pathlib import Path
 from typing import Dict, Any
 import codecs
 
 
-@logger.catch(reraise=False)
 def write_file(tool_path: str,
                data: str,
                overwrite: bool = True,
@@ -105,7 +103,7 @@ def write_file(tool_path: str,
 write_file.tool_description = {
     "type": "function",
     "function": {
-        "name": "write_file.write_file",
+        "name": "tools.write_file.write_file",
         "description": (
             "Записывает данные в файл. "
             "Если overwrite=True — перезаписывает целиком, если False — дописывает в конец. "
