@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Dict, Any, List
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import fnmatch
 
@@ -52,7 +52,7 @@ def find_files_and_dirs(tool_path: str,
         result['error'] = "include_dirs должен быть bool"
         return result
 
-    path_root = None
+    path_root: Path | None = None
     result_items: List[Dict[str, Any]] = []
     try:
         path_root = Path(tool_path).resolve()
@@ -88,8 +88,10 @@ def find_files_and_dirs(tool_path: str,
                     file_path = current_root_path / file_name
                     try:
                         stat_info = file_path.stat()
-                        mtime = datetime.fromtimestamp(stat_info.st_mtime).isoformat()
-                    except Exception as e:
+                        mtime = datetime.fromtimestamp(
+                            stat_info.st_mtime, tz=timezone.utc
+                        ).isoformat()
+                    except Exception:
                         continue  # Пропускаем файл, если не удалось получить информацию о нем
                     result_items.append({
                         "path": str(file_path),
@@ -105,6 +107,8 @@ def find_files_and_dirs(tool_path: str,
 
     except Exception as e:
         result['error'] = f"Во время поиска файлов произошла ошибка: {e}"
+        result['files'] = result_items
+        result['count'] = len(result_items)
 
     else: 
         result['success'] = True

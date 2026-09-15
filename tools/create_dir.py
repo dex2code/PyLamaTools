@@ -5,8 +5,8 @@ from pathlib import Path
 
 def create_dir(tool_path: str) -> Dict[str, Any]:
     """
-    Создаёт новый каталог по указанному пути.
-    Если каталог уже существует — возвращает success=False с ошибкой
+    Создаёт новый каталог по указанному пути включая промежуточные каталоги.
+    Если путь уже существует — возвращает success=False с ошибкой
 
     Аргументы:
         tool_path (str): путь к создаваемому каталогу
@@ -22,17 +22,20 @@ def create_dir(tool_path: str) -> Dict[str, Any]:
         "error": None
     }
 
-    if not isinstance(tool_path, str) or not tool_path.strip():
+    if not isinstance(tool_path, str):
+        result["error"] = "Ошибка! tool_path должен быть непустой строкой!"
+        return result
+    tool_path = tool_path.strip()
+    if not tool_path:
         result["error"] = "Ошибка! tool_path должен быть непустой строкой!"
         return result
 
-    directory_path = None
     try:
         directory_path = Path(tool_path).resolve()
         directory_path.mkdir(parents=True, exist_ok=False)
 
     except FileExistsError:
-        result['error'] = f"Каталог {tool_path} уже существует"
+        result['error'] = f"Путь {tool_path!r} уже существует"
 
     except PermissionError:
         result['error'] = f"Недостаточно прав для создания каталога {tool_path}"
@@ -58,7 +61,7 @@ create_dir.tool_description = {
     "type": "function",
     "function": {
         "name": "tools.create_dir.create_dir",
-        "description": "Создаёт новый каталог по указанному пути. "
+        "description": "Создаёт новый каталог по указанному пути включая промежуточные каталоги. "
         "Путь может быть абсолютным или относительным. "
         "Возвращает словарь с полями: success (bool), error (строка или None)",
         "parameters": {
@@ -79,7 +82,6 @@ create_dir.tool_description = {
 
 if __name__ == "__main__":
     import tempfile
-    from pathlib import Path
 
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp) / "x" / "y" / "z"

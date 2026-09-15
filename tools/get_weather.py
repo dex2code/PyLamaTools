@@ -3,13 +3,7 @@ from typing import Dict, Any
 import requests
 
 
-proxies = {
-    "http": "http://127.0.0.1:10808",
-    "https": "http://127.0.0.1:10808"
-}
-
-
-def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
+def get_weather(timeout: int = 10) -> Dict[str, Any]:
     """
     Возвращает погоду относительно IP-адреса клиента.
 
@@ -23,14 +17,21 @@ def get_weather(timeout: int = 10, proxies: Dict = proxies) -> Dict[str, Any]:
             - temperature (str):    Температура по Цельсию.
             - humidity (str):       Относительная влажность воздуха.
     """
-    wttr_url = "https://wttr.in/?format=j1"
+    wttr_url = "http://wttr.in/?format=j1"
 
     try:
-        r = requests.get(wttr_url, timeout=timeout, proxies=proxies)
+        r = requests.get(wttr_url, timeout=timeout)
         r.raise_for_status()
         d = r.json()
-        conditions = d.get("current_condition") or [{}]
-        c = conditions[0] if conditions else {}
+        conditions = d.get("current_condition") or []
+        if not conditions:
+            return {
+                "success": False,
+                "error": "Пустой ответ сервера",
+                "temperature": None,
+                "humidity": None,
+            }
+        c = conditions[0]
         t = str(
             c.get("FeelsLikeC", "0")
         )
@@ -57,7 +58,13 @@ get_weather.tool_description = {
     "type": "function",
     "function": {
         "name": "tools.get_weather.get_weather",
-        "description": "Возвращает погоду относительно местоположения клиента (геолокация вычисляется по IP-адресу клиента). Возвращает структурированный словарь с полями: success (bool), error (str), temperature (str), humidity (str). Если запрос завершается с ошибкой, success=false и error содержит описание проблемы.",
+        "description": (
+            "Возвращает погоду относительно местоположения клиента "
+            "(геолокация вычисляется по IP-адресу клиента). "
+            "Возвращает структурированный словарь с полями: "
+            "success (bool), error (str), temperature (str), humidity (str). "
+            "Если запрос завершается с ошибкой, success=false и error содержит описание проблемы."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

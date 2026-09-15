@@ -25,7 +25,7 @@ def read_file_content(tool_path: str,
     """
     result = {
         "success": False,
-        "file_path": f"{tool_path}",
+        "file_path": tool_path,
         "content": None,
         "size_chars": 0,
         "error": None
@@ -52,7 +52,7 @@ def read_file_content(tool_path: str,
             result['error'] = "max_chars должен быть положительным целым или None"
             return result
 
-    path_obj = None
+    path_obj: Path | None = None
     try:
         path_obj = Path(tool_path).resolve()
 
@@ -80,7 +80,9 @@ def read_file_content(tool_path: str,
         result['error'] = f"Ошибка при чтении файла '{tool_path}': {e}"
 
     except Exception as e:
-        result['error'] =  f"Неизвестная ошибка при чтении файла '{tool_path}': {e}"
+        result['error'] =  (
+            f"Неизвестная ошибка ({type(e).__name__}) при чтении файла '{tool_path}': {e}"
+        )
 
     else:
         result['success'] = True

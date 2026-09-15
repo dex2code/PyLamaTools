@@ -6,6 +6,7 @@ from pathlib import Path
 def touch_file(tool_path: str) -> Dict[str, Any]:
     """
     Создает пустой файл по пути tool_path.
+    Родительские каталоги создаются автоматически.
 
     Args:
         tool_path:  Путь к файлу (абсолютный или относительный).
@@ -28,8 +29,12 @@ def touch_file(tool_path: str) -> Dict[str, Any]:
     try:
         file_path = Path(tool_path).resolve()
 
-        if not file_path.parent.exists():
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+        parent = file_path.parent
+        if parent.exists() and not parent.is_dir():
+            result["error"] = f"Родительский путь '{parent}' не является директорией"
+            return result
+
+        parent.mkdir(parents=True, exist_ok=True)
 
         if file_path.exists() and file_path.is_dir():
             result["error"] = f"'{tool_path}' является директорией, а не файлом"

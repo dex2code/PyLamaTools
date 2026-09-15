@@ -53,7 +53,6 @@ def write_file(tool_path: str,
         result['error'] = f"Ошибка! Неизвестная кодировка: '{encoding}'"
         return result
 
-    file_path = None
     try:
         # Приводим путь к Path
         file_path = Path(tool_path).resolve()
@@ -66,10 +65,18 @@ def write_file(tool_path: str,
         # Создаём родительские директории при необходимости
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Проверяем кодировку
+        data_encoded = data.encode(encoding=encoding)
+
         # Определяем режим открытия
-        mode = "w" if overwrite else "a"
-        with open(file_path, mode, encoding=encoding) as f:
-            f.write(data)
+        mode = "wb" if overwrite else "ab"
+
+        # Пишем в файл
+        with open(file_path, mode) as f:
+            f.write(data_encoded)
+
+    except LookupError as e:
+        result['error'] = f"Ошибка! Неподходящая кодировка '{encoding}': {e}"
 
     except FileNotFoundError as e:
         result['error'] = f"Ошибка! Файл или путь не найден: {e}"
@@ -131,8 +138,10 @@ write_file.tool_description = {
                 },
                 "encoding": {
                     "type": "string",
-                    "description": "Кодировка файла на диске (используется в open()). "
-                    "По умолчанию utf-8."
+                    "description": (
+                        "Кодировка, в которую будет закодирована строка перед записью. "
+                        "По умолчанию utf-8."
+                    )
                 }
             },
             "required": ["tool_path", "data"],
@@ -162,5 +171,11 @@ if __name__ == "__main__":
         assert write_file("", "x")["success"] is False                     # tool_path
         assert write_file(str(f), "x", encoding="cp9999")["success"] is False
         assert write_file(str(f), "😀", encoding="ascii")["success"] is False
+
+        assert write_file(str(f), "new", overwrite=True)["success"] is True
+        assert f.read_text("utf-8") == "new"
+
+        assert write_file(str(f), "😀", overwrite=True, encoding="ascii")["success"] is False
+        assert f.read_text("utf-8") == "new"
 
     print("write_file: OK")
