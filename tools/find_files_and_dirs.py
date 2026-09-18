@@ -6,10 +6,9 @@ import os
 import fnmatch
 
 
-def find_files_and_dirs(tool_path: str,
-                        pattern: str,
-                        recursive: bool = True,
-                        include_dirs: bool = False) -> Dict[str, Any]:
+def find_files_and_dirs(
+    tool_path: str, pattern: str, recursive: bool = True, include_dirs: bool = False
+) -> Dict[str, Any]:
     """
     Ищет файлы и, опционально, каталоги по glob-шаблону в указанной директории.
 
@@ -31,25 +30,20 @@ def find_files_and_dirs(tool_path: str,
             - count (int):              общее количество найденных объектов.
             - error (Optional[str]):    сообщение об ошибке, если success=False.
     """
-    result = {
-        "success": False,
-        "files": [],
-        "count": 0,
-        "error": None
-    }
+    result = {"success": False, "files": [], "count": 0, "error": None}
 
     # Проверки полученных данных
     if not isinstance(tool_path, str) or not tool_path.strip():
-        result['error'] = "tool_path должен быть непустой строкой"
+        result["error"] = "tool_path должен быть непустой строкой"
         return result
     if not isinstance(pattern, str) or not pattern:
-        result['error'] = "pattern должен быть непустой строкой"
+        result["error"] = "pattern должен быть непустой строкой"
         return result
     if not isinstance(recursive, bool):
-        result['error'] = "recursive должен быть bool"
+        result["error"] = "recursive должен быть bool"
         return result
     if not isinstance(include_dirs, bool):
-        result['error'] = "include_dirs должен быть bool"
+        result["error"] = "include_dirs должен быть bool"
         return result
 
     path_root: Path | None = None
@@ -58,7 +52,9 @@ def find_files_and_dirs(tool_path: str,
         path_root = Path(tool_path).resolve()
 
         if not path_root.exists() or not path_root.is_dir():
-            result['error'] = f"Директория '{tool_path}' не существует или не является директорией."
+            result["error"] = (
+                f"Директория '{tool_path}' не существует или не является директорией."
+            )
             return result
 
         for current_root, dirs, files in os.walk(path_root):
@@ -71,16 +67,20 @@ def find_files_and_dirs(tool_path: str,
                     if fnmatch.fnmatch(dir_name, pattern):
                         try:
                             stat_info = dir_path.stat()
-                            mtime = datetime.fromtimestamp(stat_info.st_mtime).isoformat()
+                            mtime = datetime.fromtimestamp(
+                                stat_info.st_mtime
+                            ).isoformat()
                         except Exception as e:
-                            continue # Пропускаем каталог, если не удалось получить информацию
-                        result_items.append({
-                            "path": str(dir_path.resolve()),
-                            "name": dir_name,
-                            "size_bytes": 0, # Размер каталогов устанавливаем в 0
-                            "modified": mtime,
-                            "is_dir": True
-                        })
+                            continue  # Пропускаем каталог, если не удалось получить информацию
+                        result_items.append(
+                            {
+                                "path": str(dir_path.resolve()),
+                                "name": dir_name,
+                                "size_bytes": 0,  # Размер каталогов устанавливаем в 0
+                                "modified": mtime,
+                                "is_dir": True,
+                            }
+                        )
 
             # Обработка файлов
             for file_name in files:
@@ -93,29 +93,32 @@ def find_files_and_dirs(tool_path: str,
                         ).isoformat()
                     except Exception:
                         continue  # Пропускаем файл, если не удалось получить информацию о нем
-                    result_items.append({
-                        "path": str(file_path),
-                        "name": file_name,
-                        "size_bytes": stat_info.st_size,
-                        "modified": mtime,
-                        "is_dir": False
-                    })
+                    result_items.append(
+                        {
+                            "path": str(file_path),
+                            "name": file_name,
+                            "size_bytes": stat_info.st_size,
+                            "modified": mtime,
+                            "is_dir": False,
+                        }
+                    )
 
             # Останавливаем рекурсивный обход, если recursive=False
             if not recursive:
                 dirs.clear()
 
     except Exception as e:
-        result['error'] = f"Во время поиска файлов произошла ошибка: {e}"
-        result['files'] = result_items
-        result['count'] = len(result_items)
+        result["error"] = f"Во время поиска файлов произошла ошибка: {e}"
+        result["files"] = result_items
+        result["count"] = len(result_items)
 
-    else: 
-        result['success'] = True
-        result['files'] = result_items
-        result['count'] = len(result_items)
+    else:
+        result["success"] = True
+        result["files"] = result_items
+        result["count"] = len(result_items)
 
     return result
+
 
 find_files_and_dirs.tool_description = {
     "type": "function",
@@ -134,34 +137,34 @@ find_files_and_dirs.tool_description = {
                 "tool_path": {
                     "type": "string",
                     "description": "Путь к папке для поиска (абсолютный или относительный). "
-                    "Должен существовать и быть директорией."
+                    "Должен существовать и быть директорией.",
                 },
                 "pattern": {
                     "type": "string",
                     "description": "Glob-шаблон имени файла/каталога. "
                     "Поддерживаются символы *, ?, [..]. "
                     "Примеры: '*.txt', 'data_??.csv', 'log[0-9].log'. "
-                    "Регистрозависимость определяется операционной системой."
+                    "Регистрозависимость определяется операционной системой.",
                 },
                 "recursive": {
                     "type": "boolean",
                     "description": "Если True, поиск выполняется во всех вложенных подпапках "
                     "рекурсивно. Если False, поиск ограничивается только указанной директорией. "
                     "По умолчанию True.",
-                    "default": True
+                    "default": True,
                 },
                 "include_dirs": {
                     "type": "boolean",
                     "description": "Если True, в результаты включаются каталоги, "
                     "имена которых соответствуют шаблону (размер для них будет 0). "
                     "Если False, возвращаются только файлы. По умолчанию False.",
-                    "default": False
-                }
+                    "default": False,
+                },
             },
             "required": ["tool_path", "pattern"],
-            "additionalProperties": False
-        }
-    }
+            "additionalProperties": False,
+        },
+    },
 }
 
 

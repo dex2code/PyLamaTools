@@ -7,7 +7,6 @@ from typing import List, Dict, Any
 import puretiktoken
 import copy
 
-
 # Эмпирическая надбавка на chat-шаблон одного сообщения
 # (роль + служебные маркеры). Откалибруйте под свою модель по
 # `prompt_eval_count` из ответов Ollama.
@@ -46,8 +45,9 @@ def _message_tokens(message: Dict[str, Any], encoding_name: str) -> int:
 
     tool_calls = message.get("tool_calls") or []
     if tool_calls:
-        total += count_tokens(json.dumps(tool_calls, ensure_ascii=False),
-                              encoding_name=encoding_name)
+        total += count_tokens(
+            json.dumps(tool_calls, ensure_ascii=False), encoding_name=encoding_name
+        )
     return total
 
 
@@ -55,13 +55,15 @@ def count_messages_tokens(messages: List[Dict[str, Any]], encoding_name: str) ->
     """Суммарное число токенов в списке сообщений."""
     if not messages:
         return 0
-    return (sum(_message_tokens(m, encoding_name) for m in messages)
-            + _DIALOG_OVERHEAD_TOKENS)
+    return (
+        sum(_message_tokens(m, encoding_name) for m in messages)
+        + _DIALOG_OVERHEAD_TOKENS
+    )
 
 
-def truncate_by_tokens(messages: List[Dict[str, Any]],
-                       max_tokens: int,
-                       encoding_name: str) -> List[Dict[str, Any]]:
+def truncate_by_tokens(
+    messages: List[Dict[str, Any]], max_tokens: int, encoding_name: str
+) -> List[Dict[str, Any]]:
     """
     Обрезает историю сообщений до max_tokens.
 
@@ -80,13 +82,18 @@ def truncate_by_tokens(messages: List[Dict[str, Any]],
     has_system = truncated[0].get("role") == "system"
     head_size = 1 if has_system else 0
 
-    while (len(truncated) > head_size + 1
-           and count_messages_tokens(truncated, encoding_name) > max_tokens):
+    while (
+        len(truncated) > head_size + 1
+        and count_messages_tokens(truncated, encoding_name) > max_tokens
+    ):
 
         # Ищем границу следующего хода — индекс следующего 'user'.
         next_user_idx = next(
-            (i for i in range(head_size + 1, len(truncated))
-             if truncated[i].get("role") == "user"),
+            (
+                i
+                for i in range(head_size + 1, len(truncated))
+                if truncated[i].get("role") == "user"
+            ),
             None,
         )
         if next_user_idx is None:

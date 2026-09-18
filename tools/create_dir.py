@@ -17,10 +17,7 @@ def create_dir(tool_path: str) -> Dict[str, Any]:
             "error": Union[None, str]  # Текст ошибки
         }
     """
-    result: Dict[str, Any] = {
-        "success": False,
-        "error": None
-    }
+    result: Dict[str, Any] = {"success": False, "error": None}
 
     if not isinstance(tool_path, str):
         result["error"] = "Ошибка! tool_path должен быть непустой строкой!"
@@ -35,27 +32,28 @@ def create_dir(tool_path: str) -> Dict[str, Any]:
         directory_path.mkdir(parents=True, exist_ok=False)
 
     except FileExistsError:
-        result['error'] = f"Путь {tool_path!r} уже существует"
+        result["error"] = f"Путь {tool_path!r} уже существует"
 
     except PermissionError:
-        result['error'] = f"Недостаточно прав для создания каталога {tool_path}"
+        result["error"] = f"Недостаточно прав для создания каталога {tool_path}"
 
     except TypeError:
-        result['error'] = f"Некорректный тип аргументов (ожидаются строки)"
+        result["error"] = f"Некорректный тип аргументов (ожидаются строки)"
 
     except ValueError:
-        result['error'] = f"Некорректное значение аргумента"
+        result["error"] = f"Некорректное значение аргумента"
 
     except OSError as e:
-        result['error'] = f"Ошибка операционной системы: {e}"
+        result["error"] = f"Ошибка операционной системы: {e}"
 
     except Exception as e:
-        result['error'] = f"Неизвестная ошибка: {e}"
+        result["error"] = f"Неизвестная ошибка: {e}"
 
     else:
-        result['success'] = True
+        result["success"] = True
 
     return result
+
 
 create_dir.tool_description = {
     "type": "function",
@@ -70,13 +68,13 @@ create_dir.tool_description = {
                 "tool_path": {
                     "type": "string",
                     "description": "Путь до создаваемого каталога "
-                    "(например, '/tmp/new_dir' или './new_dir')"
+                    "(например, '/tmp/new_dir' или './new_dir')",
                 }
             },
             "required": ["tool_path"],
-            "additionalProperties": False
-        }
-    }
+            "additionalProperties": False,
+        },
+    },
 }
 
 
@@ -87,8 +85,8 @@ if __name__ == "__main__":
         d = Path(tmp) / "x" / "y" / "z"
 
         assert create_dir(str(d))["success"] is True and d.is_dir()
-        assert create_dir(str(d))["success"] is False                      # exists
-        assert create_dir(str(tmp))["success"] is False                    # exists
+        assert create_dir(str(d))["success"] is False  # exists
+        assert create_dir(str(tmp))["success"] is False  # exists
         assert create_dir("")["success"] is False
 
     print("create_dir: OK")

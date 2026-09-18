@@ -32,26 +32,17 @@ def get_weather(timeout: int = 10) -> Dict[str, Any]:
                 "humidity": None,
             }
         c = conditions[0]
-        t = str(
-            c.get("FeelsLikeC", "0")
-        )
-        h = str(
-            c.get("humidity", "0")
-        )
+        t = str(c.get("FeelsLikeC", "0"))
+        h = str(c.get("humidity", "0"))
     except Exception as e:
         return {
             "success": False,
             "error": f"{e}",
             "temperature": None,
-            "humidity": None
+            "humidity": None,
         }
 
-    return {
-        "success": True,
-        "error": "",
-        "temperature": t,
-        "humidity": h
-    }
+    return {"success": True, "error": "", "temperature": t, "humidity": h}
 
 
 get_weather.tool_description = {
@@ -72,11 +63,11 @@ get_weather.tool_description = {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 60,
-                    "description": "Таймаут запроса в секундах (по умолчанию 10)"
+                    "description": "Таймаут запроса в секундах (по умолчанию 10)",
                 }
             },
             "required": [],
-            "additionalProperties": False
-        }
-    }
+            "additionalProperties": False,
+        },
+    },
 }

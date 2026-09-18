@@ -6,8 +6,7 @@ from loguru import logger
 from helpers.validate_config import SettingsModel
 
 
-def load_system_prompt(settings: SettingsModel,
-                       project_root: Path) -> str:
+def load_system_prompt(settings: SettingsModel, project_root: Path) -> str:
     """
     Загружает системный промт из файла.
 

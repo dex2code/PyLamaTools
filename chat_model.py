@@ -9,13 +9,12 @@ from helpers.validate_config import SettingsModel
 import colorama
 import ollama
 
-
 # Фаза вывода: "THINKING" | "TOOL_CALL" | "ANSWERING"
 Phase = Literal["THINKING", "TOOL_CALL", "ANSWERING"]
 
 
 def _iter_chunks(
-        response: Iterator[ollama.ChatResponse] | ollama.ChatResponse
+    response: Iterator[ollama.ChatResponse] | ollama.ChatResponse,
 ) -> Iterable[ollama.ChatResponse]:
     """
     Нормализует ответ ollama.Client.chat:
@@ -50,13 +49,15 @@ def _switch_phase(phase: Phase, new: Phase, prefix: str = "") -> Phase:
     return new
 
 
-def chat_model(settings: SettingsModel,
-               messages: List[Dict[str, Any]],
-               ollama_client: ollama.Client,
-               tool_descriptions: List[Dict[str, Any]],
-               tool_functions: Dict[str, Any],
-               project_root: Path,
-               workspace_dir: Path) -> List[Dict[str, Any]]:
+def chat_model(
+    settings: SettingsModel,
+    messages: List[Dict[str, Any]],
+    ollama_client: ollama.Client,
+    tool_descriptions: List[Dict[str, Any]],
+    tool_functions: Dict[str, Any],
+    project_root: Path,
+    workspace_dir: Path,
+) -> List[Dict[str, Any]]:
     """
     Запускает диалог с моделью Ollama, обрабатывая потоковый вывод,
     вызовы инструментов и формируя итоговый ответ.
@@ -105,7 +106,9 @@ def chat_model(settings: SettingsModel,
           инструментов или клиента Ollama; они пробрасываются вызывающему коду.
     """
     # Формируем отображаемое имя ассистента для консольного вывода.
-    assistant_nick = f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}{colorama.Style.RESET_ALL}:"
+    assistant_nick = (
+        f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}{colorama.Style.RESET_ALL}:"
+    )
 
     # Счётчик итераций цикла "модель -> инструменты -> модель".
     tool_iteration = 0
@@ -114,17 +117,21 @@ def chat_model(settings: SettingsModel,
         print("🤔 ", end="", flush=True)
 
         # Чистим контекст
-        messages = truncate_by_tokens(messages,
-                                      max_tokens=settings.context_max_tokens,
-                                      encoding_name=settings.context_encoding)
+        messages = truncate_by_tokens(
+            messages,
+            max_tokens=settings.context_max_tokens,
+            encoding_name=settings.context_encoding,
+        )
 
         # Передаем в модель контекст чата и получаем ответ
-        model_answer = ollama_client.chat(model=settings.ollama_model,
-                                          messages=messages,
-                                          tools=tool_descriptions,
-                                          stream=settings.model_streaming,
-                                          think=settings.model_thinking,
-                                          options=settings.options)
+        model_answer = ollama_client.chat(
+            model=settings.ollama_model,
+            messages=messages,
+            tools=tool_descriptions,
+            stream=settings.model_streaming,
+            think=settings.model_thinking,
+            options=settings.options,
+        )
 
         # Накопители для потокового текста и вызовов инструментов.
         accumulated_content: str = ""
@@ -154,7 +161,9 @@ def chat_model(settings: SettingsModel,
                 # Накапливаем и печатаем текстовый ответ.
                 accumulated_content += content_chunk
                 phase = _switch_phase(phase, "ANSWERING", assistant_nick)
-                print(f"{colorama.Fore.LIGHTWHITE_EX}{content_chunk}", end="", flush=True)
+                print(
+                    f"{colorama.Fore.LIGHTWHITE_EX}{content_chunk}", end="", flush=True
+                )
 
             if tool_calls_chunk:
                 # Сохраняем вызовы инструментов в исходном и сериализованном виде.
@@ -170,32 +179,38 @@ def chat_model(settings: SettingsModel,
                 {
                     "role": "assistant",
                     "tool_calls": dumped_tool_calls,
-                    "content": accumulated_content
+                    "content": accumulated_content,
                 }
             )
             logger.debug("{}", messages)
             for tool_call in raw_tool_calls:
-                print(f"{colorama.Fore.LIGHTMAGENTA_EX}"
-                      f"Вызов инструмента '{tool_call.function.name}' "
-                      f"с аргументами {tool_call.function.arguments}"
-                      f"{colorama.Style.RESET_ALL}",
-                      flush=True)
+                print(
+                    f"{colorama.Fore.LIGHTMAGENTA_EX}"
+                    f"Вызов инструмента '{tool_call.function.name}' "
+                    f"с аргументами {tool_call.function.arguments}"
+                    f"{colorama.Style.RESET_ALL}",
+                    flush=True,
+                )
                 # Выполняем вызванный инструмент.
-                tool_result = execute_tool(tool_call=tool_call,
-                                           tool_functions=tool_functions,
-                                           project_root=project_root,
-                                           workspace_dir=workspace_dir)
-                print(f"↩️  {colorama.Fore.LIGHTCYAN_EX}"
-                      f"Инструмент '{tool_call.function.name}' вернул значение: "
-                      f" {tool_result}"
-                      f"{colorama.Style.RESET_ALL}",
-                      flush=True)
+                tool_result = execute_tool(
+                    tool_call=tool_call,
+                    tool_functions=tool_functions,
+                    project_root=project_root,
+                    workspace_dir=workspace_dir,
+                )
+                print(
+                    f"↩️  {colorama.Fore.LIGHTCYAN_EX}"
+                    f"Инструмент '{tool_call.function.name}' вернул значение: "
+                    f" {tool_result}"
+                    f"{colorama.Style.RESET_ALL}",
+                    flush=True,
+                )
                 # Добавляем результат инструмента в историю.
                 messages.append(
                     {
                         "role": "tool",
                         "tool_name": tool_call.function.name,
-                        "content": tool_result
+                        "content": tool_result,
                     }
                 )
                 logger.debug("{}", messages)
@@ -204,20 +219,17 @@ def chat_model(settings: SettingsModel,
         # Если модель вернула ответ
         if accumulated_content:
             # Фиксируем финальный текстовый ответ ассистента.
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": accumulated_content
-                }
-            )
+            messages.append({"role": "assistant", "content": accumulated_content})
             logger.debug("{}", messages)
             # Считаем и показываем размер контекста после ответа.
             context_tokens = count_messages_tokens(messages, settings.context_encoding)
             print(colorama.Style.RESET_ALL, flush=True)
-            print(f"{colorama.Style.DIM}"
-                  f"[ Размер контекста: {context_tokens} токенов ]"
-                  f"{colorama.Style.RESET_ALL}",
-                  flush=True)
+            print(
+                f"{colorama.Style.DIM}"
+                f"[ Размер контекста: {context_tokens} токенов ]"
+                f"{colorama.Style.RESET_ALL}",
+                flush=True,
+            )
             break
 
         # Если произошло непонятное и модель не вернула ничего
@@ -225,7 +237,7 @@ def chat_model(settings: SettingsModel,
         messages.append(
             {
                 "role": "user",
-                "content": "[СИСТЕМНОЕ УВЕДОМЛЕНИЕ] Модель вернула пустой ответ."
+                "content": "[СИСТЕМНОЕ УВЕДОМЛЕНИЕ] Модель вернула пустой ответ.",
             }
         )
         logger.debug("{}", messages)
@@ -233,8 +245,10 @@ def chat_model(settings: SettingsModel,
 
     # Срабатывает, если цикл завершился по исчерпанию лимита tool_iterations.
     else:
-        logger.warning(f"Достигнуто максимальное количество вызовов инструментов "
-                       f"на запрос пользователя. {settings.tool_iterations=}")
+        logger.warning(
+            f"Достигнуто максимальное количество вызовов инструментов "
+            f"на запрос пользователя. {settings.tool_iterations=}"
+        )
         messages.append(
             {
                 "role": "user",
@@ -243,7 +257,7 @@ def chat_model(settings: SettingsModel,
                     f"Достигнут лимит вызовов инструментов за один ответ "
                     f"({settings.tool_iterations}). "
                     "Учти это ограничение в следующих итерациях."
-                )
+                ),
             }
         )
 

@@ -6,6 +6,7 @@ from loguru import logger
 
 class ParameterProperty(BaseModel):
     """Свойство параметра функции (схема JSON Schema)."""
+
     model_config = ConfigDict(extra="allow")
     type: Literal["string", "number", "integer", "boolean", "array", "object"]
     description: str

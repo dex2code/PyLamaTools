@@ -6,8 +6,11 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import colorama
+import platform
 import ollama
 from loguru import logger
+from prompt_toolkit import prompt
+from prompt_toolkit.styles import Style
 
 from chat_model import chat_model
 from config import settings as raw_settings
@@ -19,19 +22,21 @@ from helpers.load_tools import load_tools
 from helpers.validate_config import SettingsModel, validate_config
 
 
-def main(settings: SettingsModel,
-         system_prompt: str,
-         ollama_client: ollama.Client,
-         tool_descriptions: List[Dict[str, Any]],
-         tool_functions: Dict[str, Any],
-         project_root: Path,
-         workspace_dir: Path) -> None:
+def main(
+    settings: SettingsModel,
+    system_prompt: str,
+    ollama_client: ollama.Client,
+    tool_descriptions: List[Dict[str, Any]],
+    tool_functions: Dict[str, Any],
+    project_root: Path,
+    workspace_dir: Path,
+) -> None:
     welcome_msg = (
         "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
         "инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
         "Просто задайте вопрос на русском языке — например, «Какая сейчас погода?». "
         "Модель сама решит, когда нужно вызвать инструмент и ответит полученным значением.\n"
-        "Чтобы узнать, что умеет модель - спросите: \"Что ты умеешь?\". "
+        'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
         "Если хотите закончить — напишите 'exit' или 'выход'."
     )
     print(welcome_msg)
@@ -39,17 +44,14 @@ def main(settings: SettingsModel,
     # Инициализируем пустой контекст сообщений
     messages: List[Dict[str, Any]] = []
     # Добавляем в контекст системный промт
-    messages.append(
-        {
-            "role": "system",
-            "content": system_prompt
-        }
-    )
+    messages.append({"role": "system", "content": system_prompt})
 
     # Входим в цикл чата
     while True:
         try:
-            user_input = input(f"\n👤 {colorama.Fore.YELLOW}Вы{colorama.Style.RESET_ALL}: ")
+            user_input = prompt(
+                f"\n👤 Вы: ", style=Style.from_dict({"prompt": "ansiyellow"})
+            )
         except EOFError:
             continue
 
@@ -63,30 +65,32 @@ def main(settings: SettingsModel,
         messages_before = copy.deepcopy(messages)
         try:
             # Добавляем в контекст вопрос пользователя
-            messages.append(
-                {
-                    "role": "user",
-                    "content": user_input
-                }
-            )
+            messages.append({"role": "user", "content": user_input})
             # Вызываем модель с обновленным контекстом
-            messages = chat_model(settings=settings,
-                                  messages=messages,
-                                  ollama_client=ollama_client,
-                                  tool_descriptions=tool_descriptions,
-                                  tool_functions=tool_functions,
-                                  project_root=project_root,
-                                  workspace_dir=workspace_dir)
+            messages = chat_model(
+                settings=settings,
+                messages=messages,
+                ollama_client=ollama_client,
+                tool_descriptions=tool_descriptions,
+                tool_functions=tool_functions,
+                project_root=project_root,
+                workspace_dir=workspace_dir,
+            )
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
             messages = messages_before
             continue
-        
+
 
 if __name__ == "__main__":
-    colorama.init(autoreset=True)
+    if platform.system() == "Windows":
+        colorama.just_fix_windows_console()
+        colorama.init(autoreset=True, convert=True)
+    else:
+        colorama.init(autoreset=True)
+
     logger.remove()
-    logger.add(sys.stderr, level="WARNING") # Временный, до валидации конфига
+    logger.add(sys.stderr, level="WARNING")  # Временный, до валидации конфига
 
     # Валидируем конфиг
     try:
@@ -104,20 +108,22 @@ if __name__ == "__main__":
         project_root = Path(__file__).resolve().parent
 
         # Пытаемся инициализировать workspace
-        workspace_dir = init_workspace(project_root=project_root,
-                                       workspace_dir=Path(settings.workspace_dir))
+        workspace_dir = init_workspace(
+            project_root=project_root, workspace_dir=Path(settings.workspace_dir)
+        )
         init_stage = "load_tools"
         # Получаем инструменты и их описания
-        tools_functions, tool_descriptions = load_tools(settings=settings,
-                                                        project_root=project_root)
+        tools_functions, tool_descriptions = load_tools(
+            settings=settings, project_root=project_root
+        )
 
         init_stage = "load_system_prompt"
         # Загружаем системный промт
-        system_prompt = load_system_prompt(settings=settings,
-                                           project_root=project_root)
+        system_prompt = load_system_prompt(settings=settings, project_root=project_root)
         init_stage = "count_tokens"
-        system_prompt_tokens = count_tokens(text=system_prompt,
-                                            encoding_name=settings.context_encoding)
+        system_prompt_tokens = count_tokens(
+            text=system_prompt, encoding_name=settings.context_encoding
+        )
 
         init_stage = "get_ollama_client"
         # Подключаемся к Ollama API и получаем клиента
@@ -128,41 +134,55 @@ if __name__ == "__main__":
 
     print(f"\n{colorama.Fore.GREEN}✅ Инициализация завершена:")
 
-    print(f"  🤖 {colorama.Style.DIM}"
-          f"Инструментов: {len(tool_descriptions)}"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  🤖 {colorama.Style.DIM}"
+        f"Инструментов: {len(tool_descriptions)}"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
-    print(f"  🛑 {colorama.Style.DIM}"
-          f"Песочница: '{workspace_dir}'"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  🛑 {colorama.Style.DIM}"
+        f"Песочница: '{workspace_dir}'"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
-    print(f"  🤝 {colorama.Style.DIM}"
-          f"API: '{settings.ollama_url}'"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  🤝 {colorama.Style.DIM}"
+        f"API: '{settings.ollama_url}'"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
-    print(f"  🧠 {colorama.Style.DIM}"
-          f"Модель: '{settings.ollama_model}'"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  🧠 {colorama.Style.DIM}"
+        f"Модель: '{settings.ollama_model}'"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
-    print(f"  📋 {colorama.Style.DIM}"
-          f"Ограничение контекста (токенов): {settings.context_max_tokens or '♾️'}"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  📋 {colorama.Style.DIM}"
+        f"Ограничение контекста (токенов): {settings.context_max_tokens or '♾️'}"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
-    print(f"  💬 {colorama.Style.DIM}"
-          f"Системный промт (токенов): {system_prompt_tokens}"
-          f"{colorama.Style.RESET_ALL}")
+    print(
+        f"  💬 {colorama.Style.DIM}"
+        f"Системный промт (токенов): {system_prompt_tokens}"
+        f"{colorama.Style.RESET_ALL}"
+    )
 
     print()
 
     # Исполняем главную функцию с отслеживанием Ctrl+C
     try:
-        main(settings=settings,
-             system_prompt=system_prompt,
-             ollama_client=ollama_client,
-             tool_descriptions=tool_descriptions,
-             tool_functions=tools_functions,
-             project_root=project_root,
-             workspace_dir=workspace_dir)
+        main(
+            settings=settings,
+            system_prompt=system_prompt,
+            ollama_client=ollama_client,
+            tool_descriptions=tool_descriptions,
+            tool_functions=tools_functions,
+            project_root=project_root,
+            workspace_dir=workspace_dir,
+        )
     except KeyboardInterrupt:
         logger.warning("Выполнение прервано по KeyboardInterrupt")
         sys.exit(130)

@@ -16,10 +16,7 @@ def touch_file(tool_path: str) -> Dict[str, Any]:
             - success (bool): True, если файл успешно создан.
             - error (Optional[str]): Описание ошибки (при success=False).
     """
-    result: dict[str, Any] = {
-        "success": False,
-        "error": None
-    }
+    result: dict[str, Any] = {"success": False, "error": None}
 
     # Проверка пути до файла
     if not isinstance(tool_path, str) or not tool_path.strip():
@@ -65,6 +62,7 @@ def touch_file(tool_path: str) -> Dict[str, Any]:
 
     return result
 
+
 touch_file.tool_description = {
     "type": "function",
     "function": {
@@ -89,9 +87,9 @@ touch_file.tool_description = {
                 }
             },
             "required": ["tool_path"],
-            "additionalProperties": False
-        }
-    }
+            "additionalProperties": False,
+        },
+    },
 }
 
 
@@ -105,8 +103,8 @@ if __name__ == "__main__":
         assert touch_file(str(f))["success"] is True
         assert f.is_file() and f.stat().st_size == 0
 
-        assert touch_file(str(f))["success"] is False                      # exists
-        assert touch_file(str(tmp))["success"] is False                    # is_dir
+        assert touch_file(str(f))["success"] is False  # exists
+        assert touch_file(str(tmp))["success"] is False  # is_dir
         assert touch_file("")["success"] is False
 
     print("touch_file: OK")

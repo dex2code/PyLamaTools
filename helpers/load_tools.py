@@ -9,8 +9,9 @@ import importlib
 import sys
 
 
-def load_tools(settings: SettingsModel,
-               project_root: Path) -> Tuple[Dict[str, Callable], List[Dict[str, Any]]]:
+def load_tools(
+    settings: SettingsModel, project_root: Path
+) -> Tuple[Dict[str, Callable], List[Dict[str, Any]]]:
     """
     Загружает функции-инструменты из модулей в каталоге settings.tools_dir.
 
@@ -50,9 +51,7 @@ def load_tools(settings: SettingsModel,
     tools_dir = (project_root / settings.tools_dir).resolve()
 
     if not tools_dir.is_dir():
-        raise FileNotFoundError(
-            f"Каталог инструментов '{tools_dir}' не найден"
-        )
+        raise FileNotFoundError(f"Каталог инструментов '{tools_dir}' не найден")
 
     # Проверяем наличие __init__.py - нужен для импорта модулей
     init_file = tools_dir / "__init__.py"
@@ -125,11 +124,15 @@ def load_tools(settings: SettingsModel,
             logger.info(f"Импортирована функция {attr_name} из модуля {module_name}")
 
     if not tool_functions:
-        logger.warning("Не загружено ни одного инструмента! "
-                       "Работа с функциями будет недоступна.")
+        logger.warning(
+            "Не загружено ни одного инструмента! "
+            "Работа с функциями будет недоступна."
+        )
 
     logger.debug(f"Список функций: {tool_functions.keys()}")
-    logger.debug(f"Описания функций: \n"
-                    f"{json.dumps(tool_descriptions, indent=2, ensure_ascii=False)}")
+    logger.debug(
+        f"Описания функций: \n"
+        f"{json.dumps(tool_descriptions, indent=2, ensure_ascii=False)}"
+    )
 
     return tool_functions, tool_descriptions

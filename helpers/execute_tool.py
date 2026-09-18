@@ -6,10 +6,12 @@ import ollama
 import json
 
 
-def execute_tool(tool_call: ollama.Message.ToolCall,
-                 tool_functions: Dict[str, Any],
-                 project_root: Path,
-                 workspace_dir: Path) -> str:
+def execute_tool(
+    tool_call: ollama.Message.ToolCall,
+    tool_functions: Dict[str, Any],
+    project_root: Path,
+    workspace_dir: Path,
+) -> str:
     """
     Выполняет вызов инструмента на основе данных от LLM.
 
@@ -33,7 +35,9 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
     # Получаем значение name вызываемой функции из объекта function и проверяем валидность
     func_name = getattr(func_info, "name", None)
     if not isinstance(func_name, str) or not func_name:
-        err_msg = "Ошибка: в объекте 'function' отсутствует корректное имя функции 'name'"
+        err_msg = (
+            "Ошибка: в объекте 'function' отсутствует корректное имя функции 'name'"
+        )
         logger.error(err_msg)
         return err_msg
 
@@ -60,10 +64,12 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
 
     # Если в аргументах есть 'tool_path' - проверяем на соответствие ограничения workspace_dir
     if "tool_path" in func_args:
-        tool_path_raw = func_args['tool_path']
+        tool_path_raw = func_args["tool_path"]
         # Проверяем, что tool_path непустая строка
         if not isinstance(tool_path_raw, str) or not tool_path_raw:
-            err_msg = f"Ошибка: 'tool_path' для '{func_name}' должен быть непустой строкой"
+            err_msg = (
+                f"Ошибка: 'tool_path' для '{func_name}' должен быть непустой строкой"
+            )
             logger.error(err_msg)
             return err_msg
 
@@ -79,13 +85,15 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
             tool_path_resolved = tool_path.resolve()
             tool_path_resolved.relative_to(workspace_resolved)
         except (ValueError, OSError):
-            err_msg = (f"Ошибка безопасности! "
-                       f"Инструмент '{func_name}' пытается выйти из песочницы! "
-                       f"Инструменты могут работать только в каталоге '{workspace_dir}'!")
+            err_msg = (
+                f"Ошибка безопасности! "
+                f"Инструмент '{func_name}' пытается выйти из песочницы! "
+                f"Инструменты могут работать только в каталоге '{workspace_dir}'!"
+            )
             logger.error(err_msg)
             return err_msg
 
-        func_args['tool_path'] = str(tool_path_resolved)
+        func_args["tool_path"] = str(tool_path_resolved)
 
     # Вызываем функцию с аргументами
     try:
@@ -94,7 +102,9 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
             return f"Ошибка: '{func_name}' не является вызываемым объектом"
         func_result = func(**func_args)
     except Exception as e:
-        err_msg = f"Ошибка при вызове инструмента '{func_name}': {type(e).__name__}: {e}"
+        err_msg = (
+            f"Ошибка при вызове инструмента '{func_name}': {type(e).__name__}: {e}"
+        )
         logger.exception(err_msg)
         return err_msg
 
@@ -105,5 +115,7 @@ def execute_tool(tool_call: ollama.Message.ToolCall,
     try:
         return json.dumps(func_result, ensure_ascii=False)
     except Exception:
-        logger.exception(f"Неверный формат ответа инструмента '{func_name}': {func_result}")
+        logger.exception(
+            f"Неверный формат ответа инструмента '{func_name}': {func_result}"
+        )
         return f"Неверный формат ответа инструмента '{func_name}'!"

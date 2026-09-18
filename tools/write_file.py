@@ -4,10 +4,9 @@ from typing import Dict, Any
 import codecs
 
 
-def write_file(tool_path: str,
-               data: str,
-               overwrite: bool = True,
-               encoding: str = "utf-8") -> Dict[str, Any]:
+def write_file(
+    tool_path: str, data: str, overwrite: bool = True, encoding: str = "utf-8"
+) -> Dict[str, Any]:
     """
     Записывает полученные данные в файл.
     Дописывает данные в конец файла или перезаписывает файл целиком.
@@ -24,10 +23,7 @@ def write_file(tool_path: str,
             "error": Union[None, str]  # Текст ошибки
         }
     """
-    result: Dict[str, Any] = {
-        "success": False,
-        "error": None
-    }
+    result: Dict[str, Any] = {"success": False, "error": None}
 
     # Проверка пути до файла
     if not isinstance(tool_path, str) or not tool_path.strip():
@@ -36,21 +32,21 @@ def write_file(tool_path: str,
 
     # Проверка типа полученных данных
     if not isinstance(data, str):
-        result['error'] = "Ошибка! Данные должны быть str!"
+        result["error"] = "Ошибка! Данные должны быть str!"
         return result
 
     if not isinstance(overwrite, bool):
-        result['error'] = "Ошибка! overwrite должен быть bool!"
+        result["error"] = "Ошибка! overwrite должен быть bool!"
         return result
 
     # Проверка кодировки
     if not isinstance(encoding, str):
-        result['error'] = "Ошибка! encoding должен быть строкой!"
+        result["error"] = "Ошибка! encoding должен быть строкой!"
         return result
     try:
         codecs.lookup(encoding)
     except LookupError:
-        result['error'] = f"Ошибка! Неизвестная кодировка: '{encoding}'"
+        result["error"] = f"Ошибка! Неизвестная кодировка: '{encoding}'"
         return result
 
     try:
@@ -59,7 +55,7 @@ def write_file(tool_path: str,
 
         # Проверка, что путь не является директорией
         if file_path.exists() and file_path.is_dir():
-            result['error'] = f"Ошибка! '{file_path}' является директорией, а не файлом"
+            result["error"] = f"Ошибка! '{file_path}' является директорией, а не файлом"
             return result
 
         # Создаём родительские директории при необходимости
@@ -76,36 +72,37 @@ def write_file(tool_path: str,
             f.write(data_encoded)
 
     except LookupError as e:
-        result['error'] = f"Ошибка! Неподходящая кодировка '{encoding}': {e}"
+        result["error"] = f"Ошибка! Неподходящая кодировка '{encoding}': {e}"
 
     except FileNotFoundError as e:
-        result['error'] = f"Ошибка! Файл или путь не найден: {e}"
+        result["error"] = f"Ошибка! Файл или путь не найден: {e}"
 
     except PermissionError as e:
-        result['error'] = f"Ошибка! Нет прав доступа: {e}"
+        result["error"] = f"Ошибка! Нет прав доступа: {e}"
 
     except IsADirectoryError as e:
-        result['error'] = f"Ошибка! Указан путь к директории: {e}"
+        result["error"] = f"Ошибка! Указан путь к директории: {e}"
 
     except NotADirectoryError as e:
-        result['error'] = f"Ошибка! Часть пути не является директорией: {e}"
+        result["error"] = f"Ошибка! Часть пути не является директорией: {e}"
 
     except UnicodeEncodeError as e:
-        result['error'] = f"Ошибка! Проблема с кодировкой '{encoding}': {e}"
+        result["error"] = f"Ошибка! Проблема с кодировкой '{encoding}': {e}"
 
     except OSError as e:
-        result['error'] = f"Ошибка ОС! {e}"
+        result["error"] = f"Ошибка ОС! {e}"
 
     except TypeError as e:
-        result['error'] = f"Ошибка типа! {e}"
+        result["error"] = f"Ошибка типа! {e}"
 
     except Exception as e:
-        result['error'] = f"Непредвиденная ошибка! {e}"
+        result["error"] = f"Непредвиденная ошибка! {e}"
 
     else:
-        result['success'] = True
+        result["success"] = True
 
     return result
+
 
 write_file.tool_description = {
     "type": "function",
@@ -122,11 +119,11 @@ write_file.tool_description = {
             "properties": {
                 "tool_path": {
                     "type": "string",
-                    "description": "Путь до файла (например, '/tmp/new_file' или './data/new_file')"
+                    "description": "Путь до файла (например, '/tmp/new_file' или './data/new_file')",
                 },
                 "data": {
                     "type": "string",
-                    "description": "Данные для записи в файл. Должны быть строкой."
+                    "description": "Данные для записи в файл. Должны быть строкой.",
                 },
                 "overwrite": {
                     "type": "boolean",
@@ -134,20 +131,20 @@ write_file.tool_description = {
                         "Флаг для определения режима открытия файла. "
                         "Если True - файл полностью перезаписывается новыми данными. "
                         "Если False - данные дописываются в конец файла."
-                    )
+                    ),
                 },
                 "encoding": {
                     "type": "string",
                     "description": (
                         "Кодировка, в которую будет закодирована строка перед записью. "
                         "По умолчанию utf-8."
-                    )
-                }
+                    ),
+                },
             },
             "required": ["tool_path", "data"],
-            "additionalProperties": False
-        }
-    }
+            "additionalProperties": False,
+        },
+    },
 }
 
 
@@ -167,15 +164,18 @@ if __name__ == "__main__":
         assert write_file(str(f), "new", overwrite=True)["success"] is True
         assert f.read_text("utf-8") == "new"
 
-        assert write_file(str(tmp), "x")["success"] is False               # is_dir
-        assert write_file("", "x")["success"] is False                     # tool_path
+        assert write_file(str(tmp), "x")["success"] is False  # is_dir
+        assert write_file("", "x")["success"] is False  # tool_path
         assert write_file(str(f), "x", encoding="cp9999")["success"] is False
         assert write_file(str(f), "😀", encoding="ascii")["success"] is False
 
         assert write_file(str(f), "new", overwrite=True)["success"] is True
         assert f.read_text("utf-8") == "new"
 
-        assert write_file(str(f), "😀", overwrite=True, encoding="ascii")["success"] is False
+        assert (
+            write_file(str(f), "😀", overwrite=True, encoding="ascii")["success"]
+            is False
+        )
         assert f.read_text("utf-8") == "new"
 
     print("write_file: OK")

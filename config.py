@@ -12,11 +12,7 @@ settings = {
     "display_thinking": True,
     "model_thinking": True,
     "model_streaming": True,
-    "options": {
-        "temperature": 1,
-        "top_k": 20,
-        "top_p": 0.95
-    }
+    "options": {"temperature": 1, "top_k": 20, "top_p": 0.95},
 }
 
 
