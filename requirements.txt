@@ -9,6 +9,7 @@ httpx==0.28.1
 idna==3.18
 loguru==0.7.3
 ollama==0.6.2
+prompt_toolkit==3.0.53
 puretiktoken==0.2.1
 pydantic==2.13.4
 pydantic_core==2.46.4
@@ -17,3 +18,4 @@ requests==2.34.2
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 urllib3==2.7.0
+wcwidth==0.8.4

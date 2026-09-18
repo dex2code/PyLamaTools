@@ -24,28 +24,13 @@ from helpers.validate_config import SettingsModel, validate_config
 
 def main(
     settings: SettingsModel,
-    system_prompt: str,
     ollama_client: ollama.Client,
+    messages: List[Dict[str, Any]],
     tool_descriptions: List[Dict[str, Any]],
     tool_functions: Dict[str, Any],
     project_root: Path,
     workspace_dir: Path,
 ) -> None:
-    welcome_msg = (
-        "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
-        "инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
-        "Просто задайте вопрос на русском языке — например, «Какая сейчас погода?». "
-        "Модель сама решит, когда нужно вызвать инструмент и ответит полученным значением.\n"
-        'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
-        "Если хотите закончить — напишите 'exit' или 'выход'."
-    )
-    print(welcome_msg)
-
-    # Инициализируем пустой контекст сообщений
-    messages: List[Dict[str, Any]] = []
-    # Добавляем в контекст системный промт
-    messages.append({"role": "system", "content": system_prompt})
-
     # Входим в цикл чата
     while True:
         try:
@@ -125,6 +110,12 @@ if __name__ == "__main__":
             text=system_prompt, encoding_name=settings.context_encoding
         )
 
+        init_stage = "init_messages"
+        # Инициализируем пустой контекст сообщений
+        messages: List[Dict[str, Any]] = []
+        # Добавляем в контекст системный промт
+        messages.append({"role": "system", "content": system_prompt})
+
         init_stage = "get_ollama_client"
         # Подключаемся к Ollama API и получаем клиента
         ollama_client = get_ollama_client(settings=settings)
@@ -170,14 +161,22 @@ if __name__ == "__main__":
         f"{colorama.Style.RESET_ALL}"
     )
 
-    print()
-
+    welcome_msg = (
+        "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
+        "инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
+        "Просто задайте вопрос на русском языке — например, «Какая сейчас погода?». "
+        "Модель сама решит, когда нужно вызвать инструмент и ответит полученным значением.\n"
+        'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
+        "Если хотите закончить — напишите 'exit' или 'выход'."
+    )
+    print(colorama.Fore.LIGHTWHITE_EX)
+    print(welcome_msg)
     # Исполняем главную функцию с отслеживанием Ctrl+C
     try:
         main(
             settings=settings,
-            system_prompt=system_prompt,
             ollama_client=ollama_client,
+            messages=messages,
             tool_descriptions=tool_descriptions,
             tool_functions=tools_functions,
             project_root=project_root,
