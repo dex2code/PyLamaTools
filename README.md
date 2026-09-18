@@ -52,14 +52,15 @@ settings = {
     "tools_dir": "tools",
     "workspace_dir": "workspace",
     "system_prompt_file": "system_prompt.txt",
-    "system_prompt_file_enc": "utf-8",
+    "system_prompt_file_encoding": "utf-8",
     "ollama_url": "http://127.0.0.1:11434",
-    "ollama_model": "qwen3.5:9b",
+    "ollama_model": "gemma4:e4b-mlx",
     "tool_iterations": 16,
-    "context_max_tokens": 0,
+    "context_max_tokens": 65536,
     "context_encoding": "cl100k_base",
     "display_thinking": True,
     "model_thinking": True,
+    "model_streaming": True,
     "options": {
         "temperature": 1,
         "top_k": 20,
@@ -176,6 +177,16 @@ settings = {
 
 **Назначение:**  
 Разрешает модели использовать "режим размышления" (если поддерживается). В некоторых моделях (например, DeepSeek-R1) есть специальный тег или возможность вывода цепочки рассуждений перед финальным ответом. Этот параметр включает передачу соответствующего флага в API, чтобы модель могла генерировать поясняющие промежуточные тексты.
+
+---
+
+### `model_streaming` (булево)
+
+**Значение по умолчанию:** `True`
+
+**Назначение:**  
+Управляет режимом вывода ответов модели в чат.
+Если установлено `True`, то ответ печатается в режиме реального времени. Иное значение выводит ответ в чат только после того, как модель закончит его формирование полностью.
 
 ---
 
@@ -345,7 +356,6 @@ def my_tool(tool_path: str, some_param: int = 42) -> Dict[str, Any]:
 **Шаблон:**
 
 ```python
-@logger.catch(reraise=False)
 def my_tool(...) -> Dict[str, Any]:
     if not condition:
         return {"success": False, "error": "...", "data": [], "count": 0}

@@ -5,7 +5,7 @@ settings = {
     "system_prompt_file": "system_prompt.txt",
     "system_prompt_file_encoding": "utf-8",
     "ollama_url": "http://127.0.0.1:11434",
-    "ollama_model": "ornith-1.5:9b",
+    "ollama_model": "gemma4:e4b-mlx",
     "tool_iterations": 16,
     "context_max_tokens": 65536,
     "context_encoding": "cl100k_base",
@@ -14,7 +14,3 @@ settings = {
     "model_streaming": True,
     "options": {"temperature": 1, "top_k": 20, "top_p": 0.95},
 }
-
-
-if __name__ == "__main__":
-    pass
