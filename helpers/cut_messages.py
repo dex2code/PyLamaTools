@@ -95,7 +95,3 @@ def truncate_by_tokens(messages: List[Dict[str, Any]],
         del truncated[head_size:next_user_idx]
 
     return truncated
-
-
-if __name__ == "__main__":
-    pass

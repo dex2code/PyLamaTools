@@ -51,7 +51,7 @@ def main(settings: SettingsModel,
         try:
             user_input = input(f"\n👤 {colorama.Fore.YELLOW}Вы{colorama.Style.RESET_ALL}: ")
         except EOFError:
-            break
+            continue
 
         user_input = user_input.strip()
         if user_input.lower() in ("exit", "выход"):
@@ -69,18 +69,14 @@ def main(settings: SettingsModel,
                     "content": user_input
                 }
             )
-
-            # В зависимости от флага streaming вызываем тот или иной обработчик чата
-            if settings.model_streaming:
-                raise NotImplementedError("Streaming-режим пока не реализован")
-            else:
-                messages = chat_model(settings=settings,
-                                      messages=messages,
-                                      ollama_client=ollama_client,
-                                      tool_descriptions=tool_descriptions,
-                                      tool_functions=tool_functions,
-                                      project_root=project_root,
-                                      workspace_dir=workspace_dir)
+            # Вызываем модель с обновленным контекстом
+            messages = chat_model(settings=settings,
+                                  messages=messages,
+                                  ollama_client=ollama_client,
+                                  tool_descriptions=tool_descriptions,
+                                  tool_functions=tool_functions,
+                                  project_root=project_root,
+                                  workspace_dir=workspace_dir)
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
             messages = messages_before
