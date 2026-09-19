@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-q",
         "--quit-after-prompt",
         action="store_true",
-        help="Выйти из программы после ответа модели.",
+        help="Выйти из программы после первого ответа модели.",
         dest="quit_after_prompt",
     )
     parser.add_argument(
