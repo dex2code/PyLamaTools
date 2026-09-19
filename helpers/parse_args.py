@@ -4,8 +4,8 @@ from typing import Optional, Sequence
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Создаёт парсер аргументов командной строки."""
     parser = argparse.ArgumentParser(
-        prog="main.py",
         description="PyLamaTools - LLM чат-оркестратор с локальными инструментами.",
     )
     parser.add_argument(
@@ -35,5 +35,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    """Парсит аргументы CLI. argv удобен для тестов."""
     parser = build_parser()
     return parser.parse_args(args=argv)

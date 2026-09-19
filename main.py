@@ -12,9 +12,9 @@ from loguru import logger
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
 
-from helpers.parse_args import parse_args
-from chat_model import chat_model
 from config import settings as raw_settings
+from chat_model import chat_model
+from helpers.parse_args import parse_args
 from helpers.cut_messages import count_tokens
 from helpers.get_ollama_client import get_ollama_client
 from helpers.init_workspace import init_workspace
@@ -42,11 +42,11 @@ def main(
                 initial_prompt = None
             else:
                 user_input = prompt(
-                    message=f"\n👤 Вы: ",
+                    message="\n👤 Вы: ",
                     style=Style.from_dict({"prompt": "ansiyellow"}),
                 )
         except EOFError:
-            continue
+            break
 
         user_input = user_input.strip()
         if user_input.lower() in ("exit", "выход"):
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         )
         init_stage = "load_tools"
         # Получаем инструменты и их описания
-        tools_functions, tool_descriptions = load_tools(
+        tool_functions, tool_descriptions = load_tools(
             settings=settings, project_root=project_root
         )
 
@@ -184,9 +184,9 @@ if __name__ == "__main__":
         'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
         "Если хотите закончить — напишите 'exit' или 'выход'."
     )
-    print(colorama.Fore.LIGHTWHITE_EX)
+    print()
     if not args.prompt:
-        print(welcome_msg)
+        print(colorama.Fore.LIGHTWHITE_EX + welcome_msg)
     # Исполняем главную функцию с отслеживанием Ctrl+C
     try:
         main(
@@ -194,7 +194,7 @@ if __name__ == "__main__":
             ollama_client=ollama_client,
             messages=messages,
             tool_descriptions=tool_descriptions,
-            tool_functions=tools_functions,
+            tool_functions=tool_functions,
             project_root=project_root,
             workspace_dir=workspace_dir,
             initial_prompt=args.prompt,
