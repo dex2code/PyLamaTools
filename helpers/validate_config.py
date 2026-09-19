@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, AnyHttpUrl
 
 class SettingsModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    log_level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     tools_dir: str = Field(min_length=1)
     workspace_dir: str = Field(min_length=1)
     system_prompt_file: str = Field(min_length=1)
