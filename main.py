@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import colorama
 import platform
@@ -12,6 +12,7 @@ from loguru import logger
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
 
+from helpers.parse_args import parse_args
 from chat_model import chat_model
 from config import settings as raw_settings
 from helpers.cut_messages import count_tokens
@@ -30,13 +31,20 @@ def main(
     tool_functions: Dict[str, Any],
     project_root: Path,
     workspace_dir: Path,
+    initial_prompt: Optional[str] = None,
+    quit_after_prompt: bool = False,
 ) -> None:
     # Входим в цикл чата
     while True:
         try:
-            user_input = prompt(
-                f"\n👤 Вы: ", style=Style.from_dict({"prompt": "ansiyellow"})
-            )
+            if initial_prompt:
+                user_input = initial_prompt
+                initial_prompt = None
+            else:
+                user_input = prompt(
+                    message=f"\n👤 Вы: ",
+                    style=Style.from_dict({"prompt": "ansiyellow"}),
+                )
         except EOFError:
             continue
 
@@ -66,6 +74,9 @@ def main(
             messages = messages_before
             continue
 
+        if quit_after_prompt:
+            break
+
 
 if __name__ == "__main__":
     if platform.system() == "Windows":
@@ -76,6 +87,10 @@ if __name__ == "__main__":
 
     logger.remove()
     logger.add(sys.stderr, level="WARNING")  # Временный, до валидации конфига
+
+    args = parse_args()
+    if args.ollama_model:
+        raw_settings["ollama_model"] = args.ollama_model
 
     # Валидируем конфиг
     try:
@@ -170,7 +185,8 @@ if __name__ == "__main__":
         "Если хотите закончить — напишите 'exit' или 'выход'."
     )
     print(colorama.Fore.LIGHTWHITE_EX)
-    print(welcome_msg)
+    if not args.prompt:
+        print(welcome_msg)
     # Исполняем главную функцию с отслеживанием Ctrl+C
     try:
         main(
@@ -181,6 +197,8 @@ if __name__ == "__main__":
             tool_functions=tools_functions,
             project_root=project_root,
             workspace_dir=workspace_dir,
+            initial_prompt=args.prompt,
+            quit_after_prompt=args.quit_after_prompt,
         )
     except KeyboardInterrupt:
         logger.warning("Выполнение прервано по KeyboardInterrupt")
@@ -188,3 +206,5 @@ if __name__ == "__main__":
     except Exception:
         logger.exception("Неожиданная ошибка!")
         sys.exit(1)
+    else:
+        sys.exit(0)
