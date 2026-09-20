@@ -12,9 +12,17 @@ def build_parser() -> argparse.ArgumentParser:
         "-p",
         "--prompt",
         type=str,
-        default=None,
-        help="Вопрос к LLM, передаваемый в контекст при запуске.",
+        default="",
+        help="Промт, передаваемый в контекст при запуске.",
         dest="prompt",
+    )
+    parser.add_argument(
+        "-f",
+        "--prompt-file",
+        type=str,
+        default="",
+        help="Путь к файлу с текстом промта. Текст передается в контекст при запуске.",
+        dest="prompt_file",
     )
     parser.add_argument(
         "-q",
@@ -27,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-m",
         "--model",
         type=str,
-        default=None,
+        default="",
         help="Название модели Ollama. Переопределяет значение из конфига.",
         dest="ollama_model",
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import colorama
 import platform
@@ -18,6 +18,7 @@ from helpers.parse_args import parse_args
 from helpers.cut_messages import count_tokens
 from helpers.get_ollama_client import get_ollama_client
 from helpers.init_workspace import init_workspace
+from helpers.load_user_prompt import load_user_prompt
 from helpers.load_system_prompt import load_system_prompt
 from helpers.load_tools import load_tools
 from helpers.validate_config import SettingsModel, validate_config
@@ -31,20 +32,19 @@ def main(
     tool_functions: Dict[str, Any],
     project_root: Path,
     workspace_dir: Path,
-    initial_prompt: Optional[str] = None,
+    initial_prompt: str = "",
     quit_after_prompt: bool = False,
 ) -> None:
     # Входим в цикл чата
     while True:
         try:
-            if initial_prompt:
-                user_input = initial_prompt
-                initial_prompt = None
-            else:
-                user_input = prompt(
-                    message="\n👤 Вы: ",
-                    style=Style.from_dict({"prompt": "ansiyellow"}),
-                )
+            user_input = prompt(
+                message="\n👤 Вы: ",
+                style=Style.from_dict({"prompt": "ansiyellow"}),
+                multiline=bool(initial_prompt),
+                default=initial_prompt,
+                accept_default=bool(initial_prompt),
+            )
         except EOFError:
             break
 
@@ -74,6 +74,9 @@ def main(
             messages = messages_before
             continue
 
+        user_input = ""
+        initial_prompt = ""
+
         if quit_after_prompt:
             break
 
@@ -88,9 +91,14 @@ if __name__ == "__main__":
     logger.remove()
     logger.add(sys.stderr, level="WARNING")  # Временный, до валидации конфига
 
-    args = parse_args()
-    if args.ollama_model:
-        raw_settings["ollama_model"] = args.ollama_model
+    # Парсим и читаем аргументы командной строки
+    try:
+        args = parse_args()
+        if args.ollama_model:
+            raw_settings["ollama_model"] = args.ollama_model
+    except Exception:
+        logger.exception("Ошибка парсинга аргументов командной строки")
+        sys.exit(1)
 
     # Валидируем конфиг
     try:
@@ -111,28 +119,37 @@ if __name__ == "__main__":
         workspace_dir = init_workspace(
             project_root=project_root, workspace_dir=Path(settings.workspace_dir)
         )
-        init_stage = "load_tools"
+
         # Получаем инструменты и их описания
+        init_stage = "load_tools"
         tool_functions, tool_descriptions = load_tools(
             settings=settings, project_root=project_root
         )
 
-        init_stage = "load_system_prompt"
         # Загружаем системный промт
+        init_stage = "load_system_prompt"
         system_prompt = load_system_prompt(settings=settings, project_root=project_root)
         init_stage = "count_tokens"
         system_prompt_tokens = count_tokens(
             text=system_prompt, encoding_name=settings.context_encoding
         )
 
-        init_stage = "init_messages"
         # Инициализируем пустой контекст сообщений
+        init_stage = "init_messages"
         messages: List[Dict[str, Any]] = []
         # Добавляем в контекст системный промт
         messages.append({"role": "system", "content": system_prompt})
 
-        init_stage = "get_ollama_client"
+        # Пытаемся загрузить промты из аргументов командной строки
+        init_stage = "load_prompt"
+        initial_prompt = args.prompt.strip()
+        if args.prompt_file:
+            initial_prompt = load_user_prompt(
+                path=args.prompt_file, project_root=project_root
+            )
+
         # Подключаемся к Ollama API и получаем клиента
+        init_stage = "get_ollama_client"
         ollama_client = get_ollama_client(settings=settings)
     except Exception:
         logger.exception("Ошибка инициализации окружения (этап {})", init_stage)
@@ -176,6 +193,9 @@ if __name__ == "__main__":
         f"{colorama.Style.RESET_ALL}"
     )
 
+    print()
+
+    # Печатаем welcome message, если у нас интерактивный режим
     welcome_msg = (
         "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
         "инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
@@ -184,9 +204,9 @@ if __name__ == "__main__":
         'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
         "Если хотите закончить — напишите 'exit' или 'выход'."
     )
-    print()
-    if not args.prompt:
+    if not initial_prompt:
         print(colorama.Fore.LIGHTWHITE_EX + welcome_msg)
+
     # Исполняем главную функцию с отслеживанием Ctrl+C
     try:
         main(
@@ -197,7 +217,7 @@ if __name__ == "__main__":
             tool_functions=tool_functions,
             project_root=project_root,
             workspace_dir=workspace_dir,
-            initial_prompt=args.prompt,
+            initial_prompt=initial_prompt,
             quit_after_prompt=args.quit_after_prompt,
         )
     except KeyboardInterrupt:
@@ -206,5 +226,5 @@ if __name__ == "__main__":
     except Exception:
         logger.exception("Неожиданная ошибка!")
         sys.exit(1)
-    else:
-        sys.exit(0)
+
+    sys.exit(0)
