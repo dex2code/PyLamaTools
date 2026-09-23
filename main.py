@@ -18,8 +18,7 @@ from helpers.parse_args import parse_args
 from helpers.cut_messages import count_tokens
 from helpers.get_ollama_client import get_ollama_client
 from helpers.init_workspace import init_workspace
-from helpers.load_user_prompt import load_user_prompt
-from helpers.load_system_prompt import load_system_prompt
+from helpers.load_prompt import load_prompt
 from helpers.load_tools import load_tools
 from helpers.validate_config import SettingsModel, validate_config
 
@@ -128,8 +127,7 @@ if __name__ == "__main__":
 
         # Загружаем системный промт
         init_stage = "load_system_prompt"
-        system_prompt = load_system_prompt(settings=settings, project_root=project_root)
-        init_stage = "count_tokens"
+        system_prompt = load_prompt(path=settings.system_prompt_file, project_root=project_root)
         system_prompt_tokens = count_tokens(
             text=system_prompt, encoding_name=settings.context_encoding
         )
@@ -141,10 +139,10 @@ if __name__ == "__main__":
         messages.append({"role": "system", "content": system_prompt})
 
         # Пытаемся загрузить промты из аргументов командной строки
-        init_stage = "load_prompt"
+        init_stage = "load_user_prompt"
         initial_prompt = args.prompt.strip()
         if args.prompt_file:
-            initial_prompt = load_user_prompt(
+            initial_prompt = load_prompt(
                 path=args.prompt_file, project_root=project_root
             )
 
@@ -193,8 +191,6 @@ if __name__ == "__main__":
         f"{colorama.Style.RESET_ALL}"
     )
 
-    print()
-
     # Печатаем welcome message, если у нас интерактивный режим
     welcome_msg = (
         "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
@@ -205,6 +201,7 @@ if __name__ == "__main__":
         "Если хотите закончить — напишите 'exit' или 'выход'."
     )
     if not initial_prompt:
+        print()
         print(colorama.Fore.LIGHTWHITE_EX + welcome_msg)
 
     # Исполняем главную функцию с отслеживанием Ctrl+C

@@ -7,15 +7,6 @@ from typing import List, Dict, Any
 import puretiktoken
 import copy
 
-# Эмпирическая надбавка на chat-шаблон одного сообщения
-# (роль + служебные маркеры). Откалибруйте под свою модель по
-# `prompt_eval_count` из ответов Ollama.
-_MESSAGE_OVERHEAD_TOKENS = 4
-
-# Надбавка за начало/конец диалога в chat-шаблоне.
-_DIALOG_OVERHEAD_TOKENS = 2
-
-
 @lru_cache(maxsize=None)
 def _get_encoder(encoding_name: str):
     """Кешированный BPE-энкодер."""
@@ -36,8 +27,8 @@ def count_tokens(text: str, encoding_name: str) -> int:
 
 
 def _message_tokens(message: Dict[str, Any], encoding_name: str) -> int:
-    """Токены одного сообщения: overhead + content + tool_calls."""
-    total = _MESSAGE_OVERHEAD_TOKENS
+    """Токены одного сообщения: content + tool_calls."""
+    total = 0
 
     content = message.get("content") or ""
     if content:
@@ -48,6 +39,7 @@ def _message_tokens(message: Dict[str, Any], encoding_name: str) -> int:
         total += count_tokens(
             json.dumps(tool_calls, ensure_ascii=False), encoding_name=encoding_name
         )
+
     return total
 
 
@@ -57,7 +49,6 @@ def count_messages_tokens(messages: List[Dict[str, Any]], encoding_name: str) ->
         return 0
     return (
         sum(_message_tokens(m, encoding_name) for m in messages)
-        + _DIALOG_OVERHEAD_TOKENS
     )
 
 

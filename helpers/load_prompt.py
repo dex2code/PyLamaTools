@@ -13,7 +13,7 @@ class FileReadError(Exception):
     """
 
 
-def load_user_prompt(
+def load_prompt(
     path: str,
     project_root: Path,
     *,
@@ -126,6 +126,6 @@ def load_user_prompt(
 
     text = text.removeprefix("\ufeff")
     if not text:
-        logger.warning("Файл {} пустой. Переключение в интерактивный режим.", resolved_path)
+        logger.warning("Файл {} пустой.", resolved_path)
 
     return text

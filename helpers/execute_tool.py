@@ -1,9 +1,37 @@
 from __future__ import annotations
 from loguru import logger
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from pathlib import Path
 import ollama
 import json
+
+
+def _is_path_correct(v: str) -> bool:
+    if not isinstance(v, str) or not v.strip():
+        return False
+    if "\x00" in v:
+        return False
+    return True
+
+
+def _resolve_sandboxed_path(
+    v: str,
+    project_root: Path,
+    workspace_dir: Path,
+) -> Union[Path, None]:
+
+    # Приводим tool_path к абсолютному пути относительно project_root
+    tool_path = Path(v)
+    if not tool_path.is_absolute():
+        tool_path = project_root / tool_path
+
+    try:
+        tool_path_resolved = tool_path.resolve()
+        tool_path_resolved.relative_to(workspace_dir)
+    except (ValueError, OSError, RuntimeError):
+        return None
+
+    return tool_path_resolved
 
 
 def execute_tool(
@@ -42,58 +70,65 @@ def execute_tool(
         return err_msg
 
     # Проверяем, что имя функции присутствует в инструментарии
+    if not isinstance(tool_functions, dict):
+        err_msg = "Ошибка: tool_functions должен быть словарём"
+        logger.error(err_msg)
+        return err_msg
+
     if func_name not in tool_functions:
         err_msg = f"Ошибка: функция '{func_name}' не найдена в инструментарии!"
         logger.error(err_msg)
         return err_msg
 
     # Получаем аргументы функции из объекта function и проверяем валидность
-    func_args = getattr(func_info, "arguments", None) or {}
+    func_args = getattr(func_info, "arguments", None)
+    if func_args is None:
+        func_args = {}
     if isinstance(func_args, str):
         try:
             func_args = json.loads(func_args)
         except Exception:
             err_msg = f"Ошибка: неверный формат аргументов для {func_name}: {func_args}"
-            logger.exception(err_msg)
+            logger.error(err_msg)
             return err_msg
 
     if not isinstance(func_args, dict):
-        err_msg = f"Ошибка: аргументы для {func_name} должны быть Dict"
+        err_msg = f"Ошибка: аргументы для {func_name} должны быть словарем."
         logger.error(err_msg)
         return err_msg
 
-    # Если в аргументах есть 'tool_path' - проверяем на соответствие ограничения workspace_dir
-    if "tool_path" in func_args:
-        tool_path_raw = func_args["tool_path"]
-        # Проверяем, что tool_path непустая строка
-        if not isinstance(tool_path_raw, str) or not tool_path_raw:
+    # Если в аргументах есть '*_path' - проверяем на соответствие ограничения workspace_dir
+    for arg_key, raw_arg_value in func_args.items():
+        if not isinstance(arg_key, str) or not arg_key.endswith("_path"):
+            continue
+
+        if not _is_path_correct(v=raw_arg_value):
             err_msg = (
-                f"Ошибка: 'tool_path' для '{func_name}' должен быть непустой строкой"
+                f"Ошибка! Инструмент '{func_name}': "
+                f"аргумент '{arg_key}' должен быть непустой строкой-путём "
+                f"и не должен содержать NUL-байты. "
+                f"Получено: {raw_arg_value!r}."
             )
             logger.error(err_msg)
             return err_msg
 
-        # Приводим workspace_dir к абсолютному пути
-        workspace_resolved = workspace_dir.resolve()
+        arg_value = _resolve_sandboxed_path(
+            v=raw_arg_value,
+            project_root=project_root,
+            workspace_dir=workspace_dir,
+        )
 
-        # Приводим tool_path к абсолютному пути относительно project_root
-        tool_path = Path(tool_path_raw)
-        if not tool_path.is_absolute():
-            tool_path = project_root / tool_path
-
-        try:
-            tool_path_resolved = tool_path.resolve()
-            tool_path_resolved.relative_to(workspace_resolved)
-        except (ValueError, OSError):
+        if arg_value is None:
             err_msg = (
                 f"Ошибка безопасности! "
                 f"Инструмент '{func_name}' пытается выйти из песочницы! "
+                f"Аргумент '{arg_key}' == '{raw_arg_value}'. "
                 f"Инструменты могут работать только в каталоге '{workspace_dir}'!"
             )
             logger.error(err_msg)
             return err_msg
 
-        func_args["tool_path"] = str(tool_path_resolved)
+        func_args[arg_key] = str(arg_value)
 
     # Вызываем функцию с аргументами
     try:
@@ -113,9 +148,9 @@ def execute_tool(
         return func_result
 
     try:
-        return json.dumps(func_result, ensure_ascii=False)
+        return json.dumps(func_result, ensure_ascii=False, default=str)
     except Exception:
-        logger.exception(
+        logger.error(
             f"Неверный формат ответа инструмента '{func_name}': {func_result}"
         )
         return f"Неверный формат ответа инструмента '{func_name}'!"
