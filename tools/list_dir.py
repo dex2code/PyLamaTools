@@ -3,6 +3,13 @@ import os
 from typing import Dict, Any, List
 
 
+def _safe_str(value: Any) -> str:
+    try:
+        return str(value)
+    except Exception:  # noqa: BLE001
+        return "<unprintable>"
+
+
 def _walk(
     tool_path: str,
     depth: int,
@@ -22,7 +29,7 @@ def _walk(
                 'path': tool_path,
                 'type': "unknown",
                 'size': None,
-                'error': str(e),
+                'error': _safe_str(e),
             }
         ]
 
@@ -43,7 +50,7 @@ def _walk(
             is_symlink = entry.is_symlink()
             is_file = entry.is_file(follow_symlinks=False)
         except Exception as e:
-            entry_data['error'] = str(e)
+            entry_data['error'] = _safe_str(e)
             entries.append(entry_data)
             continue
 
@@ -52,8 +59,8 @@ def _walk(
             entry_data['target'] = None
             try:
                 entry_data['target'] = os.readlink(entry.path)
-            except OSError as e:
-                entry_data['error'] = str(e)
+            except Exception as e:
+                entry_data['error'] = _safe_str(e)
             entries.append(entry_data)
             continue
 
@@ -77,7 +84,7 @@ def _walk(
             try:
                 st = entry.stat(follow_symlinks=False)
             except Exception as e:
-                entry_data['error'] = str(e)
+                entry_data['error'] = _safe_str(e)
                 entries.append(entry_data)
                 continue
 
@@ -123,7 +130,15 @@ def list_dir(
         result["error"] = "; ".join(errors)
         return result
 
-    if not os.path.isdir(tool_path):
+    try:
+        is_dir = os.path.isdir(tool_path)
+    except Exception as e:  # noqa: BLE001
+        result["error"] = (
+            f"Не удалось проверить путь {tool_path!r}: {_safe_str(e)}"
+        )
+        return result
+
+    if not is_dir:
         result["error"] = (
             f"Путь не существует или не является доступным каталогом: {tool_path}"
         )
@@ -138,7 +153,7 @@ def list_dir(
         )
         result["success"] = True
     except Exception as e:  # noqa: BLE001
-        result["error"] = f"непредвиденная ошибка: {e}"
+        result["error"] = f"непредвиденная ошибка: {_safe_str(e)}"
         result["success"] = False
 
     return result
