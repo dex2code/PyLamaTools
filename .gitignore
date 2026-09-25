@@ -220,4 +220,4 @@ __marimo__/
 # Stuff
 test.py
 workspace/
-prompt.txt
+user_prompt.txt

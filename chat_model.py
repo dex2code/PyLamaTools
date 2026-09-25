@@ -226,7 +226,7 @@ def chat_model(
             print(colorama.Style.RESET_ALL, flush=True)
             print(
                 f"{colorama.Style.DIM}"
-                f"[ Размер контекста: {context_tokens} токенов ]"
+                f"📏 Размер контекста: {context_tokens} токенов"
                 f"{colorama.Style.RESET_ALL}",
                 flush=True,
             )

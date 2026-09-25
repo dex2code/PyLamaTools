@@ -15,7 +15,7 @@ from prompt_toolkit.styles import Style
 from config import settings as raw_settings
 from chat_model import chat_model
 from helpers.parse_args import parse_args
-from helpers.cut_messages import count_tokens
+from helpers.cut_messages import count_tokens, count_messages_tokens
 from helpers.get_ollama_client import get_ollama_client
 from helpers.init_workspace import init_workspace
 from helpers.load_prompt import load_prompt
@@ -48,9 +48,22 @@ def main(
             break
 
         user_input = user_input.strip()
-        if user_input.lower() in ("exit", "выход"):
-            break
         if not user_input:
+            continue
+
+        cmd = user_input.lower()
+        if cmd in ("exit", "выход"):
+            break
+        if cmd == "reset":
+            del messages[1:]
+            print(f"🧹 {colorama.Fore.LIGHTRED_EX}Контекст очищен!{colorama.Style.RESET_ALL}")
+            context_tokens = count_messages_tokens(messages, settings.context_encoding)
+            print(
+                f"{colorama.Style.DIM}"
+                f"📏 Размер контекста: {context_tokens} токенов"
+                f"{colorama.Style.RESET_ALL}",
+                flush=True,
+            )
             continue
 
         # Делаем копию контекста для восстановления, если что-то пошло не так
@@ -153,52 +166,61 @@ if __name__ == "__main__":
         logger.exception("Ошибка инициализации окружения (этап {})", init_stage)
         sys.exit(1)
 
-    print(f"\n{colorama.Fore.GREEN}✅ Инициализация завершена:")
+    print(f"\n✅ {colorama.Fore.GREEN}Инициализация завершена:")
 
     print(
-        f"  🤖 {colorama.Style.DIM}"
+        f"🔧 {colorama.Style.DIM}"
         f"Инструментов: {len(tool_descriptions)}"
         f"{colorama.Style.RESET_ALL}"
     )
 
     print(
-        f"  🛑 {colorama.Style.DIM}"
+        f"🚧 {colorama.Style.DIM}"
         f"Песочница: '{workspace_dir}'"
         f"{colorama.Style.RESET_ALL}"
     )
 
     print(
-        f"  🤝 {colorama.Style.DIM}"
+        f"🔌 {colorama.Style.DIM}"
         f"API: '{settings.ollama_url}'"
         f"{colorama.Style.RESET_ALL}"
     )
 
     print(
-        f"  🧠 {colorama.Style.DIM}"
+        f"🧠 {colorama.Style.DIM}"
         f"Модель: '{settings.ollama_model}'"
         f"{colorama.Style.RESET_ALL}"
     )
 
     print(
-        f"  📋 {colorama.Style.DIM}"
+        f"📏 {colorama.Style.DIM}"
         f"Ограничение контекста (токенов): {settings.context_max_tokens or '♾️'}"
         f"{colorama.Style.RESET_ALL}"
     )
 
     print(
-        f"  💬 {colorama.Style.DIM}"
+        f"📜 {colorama.Style.DIM}"
         f"Системный промт (токенов): {system_prompt_tokens}"
         f"{colorama.Style.RESET_ALL}"
     )
 
     # Печатаем welcome message, если у нас интерактивный режим
     welcome_msg = (
-        "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия: "
-        "инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n"
-        "Просто задайте вопрос на русском языке — например, «Какая сейчас погода?». "
-        "Модель сама решит, когда нужно вызвать инструмент и ответит полученным значением.\n"
-        'Чтобы узнать, что умеет модель - спросите: "Что ты умеешь?". '
-        "Если хотите закончить — напишите 'exit' или 'выход'."
+        f"{colorama.Style.RESET_ALL}"
+        "✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия.\n"
+        "   Инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.\n\n"
+
+        f"ℹ️  {colorama.Fore.LIGHTCYAN_EX}"
+        "https://github.com/dex2code/PyLamaTools"
+        f"{colorama.Style.RESET_ALL}\n\n"
+
+        "❓ Чтобы узнать, что умеет модель - спросите: "
+        f"'{colorama.Fore.LIGHTYELLOW_EX}Что ты умеешь?{colorama.Style.RESET_ALL}'.\n"
+        "🚪 Если хотите закончить — напишите "
+        f"'{colorama.Fore.LIGHTYELLOW_EX}exit{colorama.Style.RESET_ALL}' "
+        f"или '{colorama.Fore.LIGHTYELLOW_EX}выход{colorama.Style.RESET_ALL}'.\n"
+        "🧹 Для очистки контекста используйте команду "
+        f"'{colorama.Fore.LIGHTYELLOW_EX}reset{colorama.Style.RESET_ALL}'."
     )
     if not initial_prompt:
         print()
