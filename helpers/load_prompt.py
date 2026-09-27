@@ -126,6 +126,6 @@ def load_prompt(
 
     text = text.removeprefix("\ufeff")
     if not text:
-        logger.warning("Файл {} пустой.", resolved_path)
+        raise ValueError(f"Файл {resolved_path} пустой.")
 
     return text

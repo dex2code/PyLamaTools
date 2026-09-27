@@ -21,6 +21,7 @@ def _not_found(path: str) -> Dict[str, Any]:
         "is_writable": None,
     }
 
+
 def _fail(message: str) -> Dict[str, Any]:
     return {"success": False, "error": message, "result": {}}
 
@@ -75,15 +76,17 @@ def info_file_or_dir(tool_path: str) -> Dict[str, Any]:
 
     kind = _classify(st)
 
-    return _ok({
-        "exists": True,
-        "path": tool_path,
-        "type": kind,
-        "size": st.st_size if kind == "file" else None,
-        "mtime": _iso(st.st_mtime),
-        "is_readable": os.access(tool_path, os.R_OK),
-        "is_writable": os.access(tool_path, os.W_OK),
-    })
+    return _ok(
+        {
+            "exists": True,
+            "path": tool_path,
+            "type": kind,
+            "size": st.st_size if kind == "file" else None,
+            "mtime": _iso(st.st_mtime),
+            "is_readable": os.access(tool_path, os.R_OK),
+            "is_writable": os.access(tool_path, os.W_OK),
+        }
+    )
 
 
 info_file_or_dir.tool_description = {
@@ -112,9 +115,7 @@ info_file_or_dir.tool_description = {
             "properties": {
                 "tool_path": {
                     "type": "string",
-                    "description": (
-                        "Путь к файлу или каталогу."
-                    ),
+                    "description": ("Путь к файлу или каталогу."),
                 },
             },
             "required": ["tool_path"],

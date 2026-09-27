@@ -16,6 +16,9 @@ class SettingsModel(BaseModel):
     context_max_tokens: int = Field(ge=0)
     context_encoding: Literal["cl100k_base", "o200k_base"]
     display_thinking: bool
+    display_tool_call: bool
+    display_answer: bool
+    display_content_length: bool
     model_thinking: bool
     model_streaming: bool
     options: Optional[Dict[str, Any]] = None

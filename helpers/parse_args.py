@@ -39,10 +39,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="Название модели Ollama. Переопределяет значение из конфига.",
         dest="ollama_model",
     )
+    parser.add_argument(
+        "-o",
+        "--output-format",
+        type=str,
+        choices=["plain", "json", "interactive"],
+        default="interactive",
+        help=(
+            "Формат вывода. По умолчанию 'interactive'. "
+            "При указании 'plain' или 'json' автоматически "
+            "включается режим --quit-after-prompt и требуется задать "
+            "хотя бы один из --prompt или --prompt-file."
+        ),
+        dest="output_format",
+    )
     return parser
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Парсит аргументы CLI. argv удобен для тестов."""
     parser = build_parser()
-    return parser.parse_args(args=argv)
+    args = parser.parse_args(args=argv)
+
+    if args.prompt and not args.prompt.strip():
+        parser.error("--prompt не должен быть пустой строкой или строкой из пробелов")
+
+    if args.output_format in ("plain", "json"):
+        args.quit_after_prompt = True
+
+        if not args.prompt and not args.prompt_file:
+            parser.error(
+                f"--output-format {args.output_format} требует указания "
+                f"--prompt или --prompt-file"
+            )
+
+    return args

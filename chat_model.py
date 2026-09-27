@@ -10,7 +10,7 @@ import colorama
 import ollama
 
 # Фаза вывода: "THINKING" | "TOOL_CALL" | "ANSWERING"
-Phase = Literal["THINKING", "TOOL_CALL", "ANSWERING"]
+Phase = Literal["INIT", "THINKING", "TOOL_CALL", "ANSWERING"]
 
 
 def _iter_chunks(
@@ -30,7 +30,7 @@ def _iter_chunks(
     return iter([response])
 
 
-def _switch_phase(phase: Phase, new: Phase, prefix: str = "") -> Phase:
+def _switch_phase(phase: Phase, new: Phase, disp_new: bool, prefix: str = "") -> Phase:
     """
     Переключает текущую фазу вывода модели и, при смене фазы, печатает
     ANSI-сброс стиля и (опционально) префикс новой фазы.
@@ -38,14 +38,18 @@ def _switch_phase(phase: Phase, new: Phase, prefix: str = "") -> Phase:
     Args:
         phase: Текущая активная фаза вывода (до переключения).
         new: Фаза, в которую нужно перейти.
+        disp_new: нужно ли отображать контент новой фазы (настройка)
         prefix: Строка-префикс для новой фазы
     Returns:
         Фаза `new`.
     """
     if phase != new:
-        if prefix:
-            print(colorama.Style.RESET_ALL, flush=True)
-            print(prefix, end="  ", flush=True)
+        print(colorama.Style.RESET_ALL, end="", flush=True)
+        if disp_new:
+            print(flush=True)
+            if prefix:
+                print(f"{prefix}", end="", flush=True)
+
     return new
 
 
@@ -107,14 +111,13 @@ def chat_model(
     """
     # Формируем отображаемое имя ассистента для консольного вывода.
     assistant_nick = (
-        f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}{colorama.Style.RESET_ALL}:"
+        f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}{colorama.Style.RESET_ALL}: "
     )
 
     # Счётчик итераций цикла "модель -> инструменты -> модель".
     tool_iteration = 0
     while tool_iteration < settings.tool_iterations:
         tool_iteration += 1
-        print("🤔 ", end="", flush=True)
 
         # Чистим контекст
         messages = truncate_by_tokens(
@@ -134,11 +137,12 @@ def chat_model(
         )
 
         # Накопители для потокового текста и вызовов инструментов.
+        accumulated_thinking: str = ""
         accumulated_content: str = ""
         raw_tool_calls: List[ollama.Message.ToolCall] = []
         dumped_tool_calls: List[Dict] = []
         # Предустанавливаем фазу ответа
-        phase: Phase = "THINKING"
+        phase: Phase = "INIT"
 
         # Разбираем потоковые чанки ответа модели.
         for chunk in _iter_chunks(model_answer):
@@ -153,17 +157,13 @@ def chat_model(
             content_chunk: str = getattr(message, "content", None) or ""
 
             if thinking_chunk:
+                accumulated_thinking += thinking_chunk
                 # Переключаем фазу и печатаем размышление.
-                phase = _switch_phase(phase, "THINKING", "🤔")
-                print(f"{colorama.Style.DIM}{thinking_chunk}", end="", flush=True)
-
-            if content_chunk:
-                # Накапливаем и печатаем текстовый ответ.
-                accumulated_content += content_chunk
-                phase = _switch_phase(phase, "ANSWERING", assistant_nick)
-                print(
-                    f"{colorama.Fore.LIGHTWHITE_EX}{content_chunk}", end="", flush=True
+                phase = _switch_phase(
+                    phase, "THINKING", settings.display_thinking, "🤔 "
                 )
+                if settings.display_thinking:
+                    print(f"{colorama.Style.DIM}{thinking_chunk}", end="", flush=True)
 
             if tool_calls_chunk:
                 # Сохраняем вызовы инструментов в исходном и сериализованном виде.
@@ -171,9 +171,18 @@ def chat_model(
                     raw_tool_calls.append(tc)
                     dumped_tool_calls.append(tc.model_dump(exclude_none=True))
 
+            if content_chunk:
+                # Накапливаем и печатаем текстовый ответ.
+                accumulated_content += content_chunk
+                phase = _switch_phase(
+                    phase, "ANSWERING", settings.display_answer, assistant_nick
+                )
+                if settings.display_answer:
+                    print(f"{colorama.Style.NORMAL}{content_chunk}", end="", flush=True)
+
         # Если модель вернула вызов инструмента
         if raw_tool_calls:
-            phase = _switch_phase(phase, "TOOL_CALL", "⚙️")
+            phase = _switch_phase(phase, "TOOL_CALL", settings.display_tool_call, "🔨 ")
             # Добавляем в историю ответ ассистента с вызовами инструментов.
             messages.append(
                 {
@@ -184,13 +193,14 @@ def chat_model(
             )
             logger.debug("{}", messages)
             for tool_call in raw_tool_calls:
-                print(
-                    f"{colorama.Fore.LIGHTMAGENTA_EX}"
-                    f"Вызов инструмента '{tool_call.function.name}' "
-                    f"с аргументами {tool_call.function.arguments}"
-                    f"{colorama.Style.RESET_ALL}",
-                    flush=True,
-                )
+                if settings.display_tool_call:
+                    print(
+                        f"{colorama.Fore.LIGHTMAGENTA_EX}"
+                        f"Вызов инструмента '{tool_call.function.name}' "
+                        f"с аргументами {tool_call.function.arguments}"
+                        f"{colorama.Style.RESET_ALL}",
+                        flush=True,
+                    )
                 # Выполняем вызванный инструмент.
                 tool_result = execute_tool(
                     tool_call=tool_call,
@@ -198,13 +208,14 @@ def chat_model(
                     project_root=project_root,
                     workspace_dir=workspace_dir,
                 )
-                print(
-                    f"↩️  {colorama.Fore.LIGHTCYAN_EX}"
-                    f"Инструмент '{tool_call.function.name}' вернул значение: "
-                    f" {tool_result}"
-                    f"{colorama.Style.RESET_ALL}",
-                    flush=True,
-                )
+                if settings.display_tool_call:
+                    print(
+                        f"{colorama.Fore.LIGHTCYAN_EX}"
+                        f"Инструмент '{tool_call.function.name}' вернул значение: "
+                        f" {tool_result}"
+                        f"{colorama.Style.RESET_ALL}",
+                        flush=True,
+                    )
                 # Добавляем результат инструмента в историю.
                 messages.append(
                     {
@@ -223,13 +234,14 @@ def chat_model(
             logger.debug("{}", messages)
             # Считаем и показываем размер контекста после ответа.
             context_tokens = count_messages_tokens(messages, settings.context_encoding)
-            print(colorama.Style.RESET_ALL, flush=True)
-            print(
-                f"{colorama.Style.DIM}"
-                f"📏 Размер контекста: {context_tokens} токенов"
-                f"{colorama.Style.RESET_ALL}",
-                flush=True,
-            )
+            if settings.display_content_length:
+                print(colorama.Style.RESET_ALL, flush=True)
+                print(
+                    f"{colorama.Style.DIM}"
+                    f"Размер контекста: {context_tokens} токенов"
+                    f"{colorama.Style.RESET_ALL}",
+                    flush=True,
+                )
             break
 
         # Если произошло непонятное и модель не вернула ничего
