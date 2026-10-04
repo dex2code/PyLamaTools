@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import sys
+import json
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -14,7 +15,6 @@ from prompt_toolkit.styles import Style
 from argparse import Namespace
 
 from config import settings as raw_settings
-from chat_model import chat_model
 from helpers.parse_args import parse_args
 from helpers.cut_messages import count_tokens, count_messages_tokens
 from helpers.get_ollama_client import get_ollama_client
@@ -22,6 +22,9 @@ from helpers.init_workspace import init_workspace
 from helpers.load_prompt import load_prompt
 from helpers.load_tools import load_tools
 from helpers.validate_config import SettingsModel, validate_config
+
+from chat.renderer import ConsoleRenderer
+from chat.model import chat_model
 
 
 def main(
@@ -36,6 +39,18 @@ def main(
     initial_prompt: str = "",
     quit_after_prompt: bool = False,
 ) -> None:
+
+    renderer = ConsoleRenderer(
+        assistant_nick=(
+            f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}"
+            f"{colorama.Style.RESET_ALL}: "
+        ),
+        display_thinking=settings.display_thinking,
+        display_answer=settings.display_answer,
+        display_tool_call=settings.display_tool_call,
+        display_content_length=settings.display_content_length,
+    )
+
     # Входим в цикл чата
     while True:
 
@@ -55,16 +70,26 @@ def main(
             if not user_input:
                 continue
 
+            cmd = user_input.lower()
+            if cmd == "/exit":
+                break
+            elif cmd == "/reset":
+                messages = [m for m in messages if m["role"] == "system"]
+                logger.warning("Контекст очищен!")
+                continue
+            elif cmd == "/context":
+                text = json.dumps(messages, indent=2, ensure_ascii=False)
+                print(
+                    f"{colorama.Style.DIM}"
+                    f"{text.replace("\\n", chr(10))}"
+                    f"{colorama.Style.RESET_ALL}"
+                )
+                tokens = count_messages_tokens(messages, settings.context_encoding)
+                renderer.on_context_size(tokens=tokens)
+                continue
+
         elif args.output_format in ("plain", "json"):
             user_input = initial_prompt
-
-        cmd = user_input.lower()
-        if cmd in ("exit", "выход"):
-            break
-        if cmd == "reset":
-            del messages[1:]
-            logger.warning("Контекст очищен!")
-            continue
 
         # Делаем копию контекста для восстановления, если что-то пошло не так
         messages_before = copy.deepcopy(messages)
@@ -80,6 +105,7 @@ def main(
                 tool_functions=tool_functions,
                 project_root=project_root,
                 workspace_dir=workspace_dir,
+                callbacks=renderer,
             )
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
@@ -90,7 +116,9 @@ def main(
         initial_prompt = ""
 
         if args.output_format in ("plain", "json"):
-            last_assistant = next((m for m in reversed(messages) if m["role"] == "assistant"), None)
+            last_assistant = next(
+                (m for m in reversed(messages) if m["role"] == "assistant"), None
+            )
             if last_assistant:
                 if args.output_format == "plain":
                     last_content = last_assistant.get("content", "")
@@ -102,7 +130,6 @@ def main(
             break
 
     print(colorama.Style.RESET_ALL, flush=True)
-
 
 
 if __name__ == "__main__":
@@ -235,21 +262,27 @@ if __name__ == "__main__":
             f"ℹ️  {colorama.Fore.LIGHTCYAN_EX}"
             "https://github.com/dex2code/PyLamaTools"
             f"{colorama.Style.RESET_ALL}\n\n"
+
             f"{colorama.Style.RESET_ALL}"
             "✨ Этот чат работает с языковой моделью, которая умеет "
             "выполнять полезные действия.\n"
             "   Инструментарий находится в каталоге tools и вы можете "
             "расширять его самостоятельно.\n"
+
             "❓ Чтобы узнать, что умеет модель - спросите: "
             f"'{colorama.Fore.LIGHTYELLOW_EX}Что ты умеешь?"
             f"{colorama.Style.RESET_ALL}'.\n"
+
             "🚪 Если хотите закончить — напишите "
-            f"'{colorama.Fore.LIGHTYELLOW_EX}exit"
-            f"{colorama.Style.RESET_ALL}' "
-            f"или '{colorama.Fore.LIGHTYELLOW_EX}выход"
+            f"'{colorama.Fore.LIGHTYELLOW_EX}/exit"
             f"{colorama.Style.RESET_ALL}'.\n"
+
+            "🔍 Посмотреть содержимое контекста: "
+            f"'{colorama.Fore.LIGHTYELLOW_EX}/context"
+            f"{colorama.Style.RESET_ALL}'.\n"
+
             "🧹 Для очистки контекста используйте команду "
-            f"'{colorama.Fore.LIGHTYELLOW_EX}reset"
+            f"'{colorama.Fore.LIGHTYELLOW_EX}/reset"
             f"{colorama.Style.RESET_ALL}'."
         )
         print(colorama.Fore.LIGHTWHITE_EX + welcome_msg)

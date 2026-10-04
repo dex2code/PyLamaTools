@@ -9,7 +9,7 @@ settings = {
     "system_prompt_file_encoding": "utf-8",
 
     "ollama_url": "http://127.0.0.1:11434",
-    "ollama_model": "gemma4:e4b-mlx",
+    "ollama_model": "ornith-1.5:9b",
 
     "tool_iterations": 128,
 
@@ -25,8 +25,8 @@ settings = {
     "model_streaming": True,
 
     "options": {
-        "temperature": 1.0,
-        "top_k": 64,
+        "temperature": 0.6,
+        "top_k": 20,
         "top_p": 0.95
     }
 

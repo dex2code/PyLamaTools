@@ -4,12 +4,15 @@ from typing import Dict, Any, Union
 from pathlib import Path
 import ollama
 import json
+import unicodedata
 
 
 def _is_path_correct(v: str) -> bool:
-    if not isinstance(v, str) or not v.strip():
+    if not isinstance(v, str):
         return False
-    if "\x00" in v:
+    if not v or v != v.strip():
+        return False
+    if any(unicodedata.category(c) == "Cc" for c in v):
         return False
     return True
 
@@ -98,15 +101,17 @@ def execute_tool(
         return err_msg
 
     # Если в аргументах есть '*_path' - проверяем на соответствие ограничения workspace_dir
+    resolved_args: dict[str, Any] = {}
     for arg_key, raw_arg_value in func_args.items():
         if not isinstance(arg_key, str) or not arg_key.endswith("_path"):
+            resolved_args[arg_key] = raw_arg_value
             continue
 
         if not _is_path_correct(v=raw_arg_value):
             err_msg = (
                 f"Ошибка! Инструмент '{func_name}': "
                 f"аргумент '{arg_key}' должен быть непустой строкой-путём "
-                f"и не должен содержать NUL-байты. "
+                f"без пробелов по краям и управляющих символов "
                 f"Получено: {raw_arg_value!r}."
             )
             logger.error(err_msg)
@@ -128,14 +133,14 @@ def execute_tool(
             logger.error(err_msg)
             return err_msg
 
-        func_args[arg_key] = str(arg_value)
+        resolved_args[arg_key] = str(arg_value)
 
     # Вызываем функцию с аргументами
     try:
         func = tool_functions[func_name]
         if not callable(func):
             return f"Ошибка: '{func_name}' не является вызываемым объектом"
-        func_result = func(**func_args)
+        func_result = func(**resolved_args)
     except Exception as e:
         err_msg = (
             f"Ошибка при вызове инструмента '{func_name}': {type(e).__name__}: {e}"
