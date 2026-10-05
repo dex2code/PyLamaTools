@@ -332,7 +332,8 @@ $ python -m main
 ```
 
 ```
-✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия. Инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.
+✨ Этот чат работает с языковой моделью, которая умеет выполнять полезные действия.
+Инструментарий находится в каталоге tools и вы можете расширять его самостоятельно.
 ❓ Чтобы узнать, что умеет модель - спросите: 'Что ты умеешь?'.
 🚪 Если хотите закончить — напишите '/exit'.
 🔍 Посмотреть содержимое контекста: '/context'.
@@ -344,13 +345,13 @@ $ python -m main
 ```
 
 ```
-🤔 The user is asking if it's soon New Year. This requires checking the current date. Let me get the current time to answer accurately.
+🤔 The user is asking if it's soon New Year. This requires checking the current date.
+Let me get the current time to answer accurately.
 The user wrote in Russian, so I should respond in Russian.
 ```
 
 ```
 🔨 Вызов инструмента 'tools.get_current_time.get_current_time' с аргументами {}
-
 Инструмент 'tools.get_current_time.get_current_time' вернул значение:  {"success": true, "error": null, "result": "2026-10-05 16:47:59 (Europe/Moscow)"}
 ```
 
@@ -363,13 +364,9 @@ The user wrote in Russian, so I should respond in Russian.
 До 1 января осталось около двух с половиной месяцев (примерно 87–88 дней). Так что времени предпраздничного волшебства ещё море, можно спокойно готовиться к праздникам! 🎄
 
 Если хочешь, могу рассказать, чем обычно полезно заняться уже сейчас:
-
 - Составить список новогодних желаний
-
 - Подумать о подарках близким
-
 - Планировать бюджет на праздники
-
 - Начать вести ёлочную или рождественскую тематику (если пишешь тексты)
 
 Размер контекста: 1717 токенов
