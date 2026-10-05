@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Literal, Any
+
 from collections.abc import Mapping
+from typing import Any, Literal
+
 import colorama
 
 Phase = Literal["INIT", "THINKING", "TOOL_CALL", "ANSWERING"]

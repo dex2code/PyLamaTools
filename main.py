@@ -1,30 +1,29 @@
 from __future__ import annotations
 
 import copy
-import sys
 import json
+import platform
+import sys
+from argparse import Namespace
 from pathlib import Path
 from typing import Any, Dict, List
 
 import colorama
-import platform
 import ollama
 from loguru import logger
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
-from argparse import Namespace
 
+from chat.model import chat_model
+from chat.renderer import ConsoleRenderer
 from config import settings as raw_settings
-from helpers.parse_args import parse_args
-from helpers.cut_messages import count_tokens, count_messages_tokens
+from helpers.cut_messages import count_messages_tokens, count_tokens
 from helpers.get_ollama_client import get_ollama_client
 from helpers.init_workspace import init_workspace
 from helpers.load_prompt import load_prompt
 from helpers.load_tools import load_tools
+from helpers.parse_args import parse_args
 from helpers.validate_config import SettingsModel, validate_config
-
-from chat.renderer import ConsoleRenderer
-from chat.model import chat_model
 
 
 def main(
@@ -40,7 +39,7 @@ def main(
     quit_after_prompt: bool = False,
 ) -> None:
 
-    renderer = ConsoleRenderer(
+    console_renderer = ConsoleRenderer(
         assistant_nick=(
             f"🤖 {colorama.Fore.YELLOW}{settings.ollama_model}"
             f"{colorama.Style.RESET_ALL}: "
@@ -85,7 +84,7 @@ def main(
                     f"{colorama.Style.RESET_ALL}"
                 )
                 tokens = count_messages_tokens(messages, settings.context_encoding)
-                renderer.on_context_size(tokens=tokens)
+                console_renderer.on_context_size(tokens=tokens)
                 continue
 
         elif args.output_format in ("plain", "json"):
@@ -105,11 +104,15 @@ def main(
                 tool_functions=tool_functions,
                 project_root=project_root,
                 workspace_dir=workspace_dir,
-                callbacks=renderer,
+                cb=console_renderer,
             )
         except Exception:
             logger.exception("🔴 Ошибка взаимодействия с моделью. Контекст был очищен.")
             messages = messages_before
+
+            if args.output_format in ("plain", "json"):
+                raise
+
             continue
 
         user_input = ""
@@ -124,7 +127,13 @@ def main(
                     last_content = last_assistant.get("content", "")
                     print(last_content, end="", flush=True)
                 if args.output_format == "json":
-                    print(last_assistant, end="", flush=True)
+                    print(
+                        json.dumps(
+                            last_assistant,
+                            ensure_ascii=False,
+                        ),
+                        flush=True
+                    )
 
         if quit_after_prompt:
             break
@@ -262,25 +271,20 @@ if __name__ == "__main__":
             f"ℹ️  {colorama.Fore.LIGHTCYAN_EX}"
             "https://github.com/dex2code/PyLamaTools"
             f"{colorama.Style.RESET_ALL}\n\n"
-
             f"{colorama.Style.RESET_ALL}"
             "✨ Этот чат работает с языковой моделью, которая умеет "
             "выполнять полезные действия.\n"
             "   Инструментарий находится в каталоге tools и вы можете "
             "расширять его самостоятельно.\n"
-
             "❓ Чтобы узнать, что умеет модель - спросите: "
             f"'{colorama.Fore.LIGHTYELLOW_EX}Что ты умеешь?"
             f"{colorama.Style.RESET_ALL}'.\n"
-
             "🚪 Если хотите закончить — напишите "
             f"'{colorama.Fore.LIGHTYELLOW_EX}/exit"
             f"{colorama.Style.RESET_ALL}'.\n"
-
             "🔍 Посмотреть содержимое контекста: "
             f"'{colorama.Fore.LIGHTYELLOW_EX}/context"
             f"{colorama.Style.RESET_ALL}'.\n"
-
             "🧹 Для очистки контекста используйте команду "
             f"'{colorama.Fore.LIGHTYELLOW_EX}/reset"
             f"{colorama.Style.RESET_ALL}'."

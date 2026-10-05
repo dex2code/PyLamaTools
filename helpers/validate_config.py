@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Dict, Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, AnyHttpUrl
+
+from typing import Any, Dict, Literal, Optional
+
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 
 class SettingsModel(BaseModel):

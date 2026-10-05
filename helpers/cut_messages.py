@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import copy
 import json
 from functools import lru_cache
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import puretiktoken
-import copy
+
 
 @lru_cache(maxsize=None)
 def _get_encoder(encoding_name: str):

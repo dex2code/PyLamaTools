@@ -1,7 +1,8 @@
 from __future__ import annotations
-from pathlib import Path
-from typing import Dict, Any
+
 import codecs
+from pathlib import Path
+from typing import Any, Dict
 
 
 def write_file(

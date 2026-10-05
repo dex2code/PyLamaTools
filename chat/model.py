@@ -1,13 +1,16 @@
 from __future__ import annotations
-from typing import List, Dict, Any, Tuple
+
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from chat.callbacks import ChatCallbacks
-from helpers.cut_messages import truncate_by_tokens, count_messages_tokens
+from typing import Any, Dict, List, Tuple
+
+import ollama
+from loguru import logger
+
+from chat.renderer import ConsoleRenderer
+from helpers.cut_messages import count_messages_tokens, truncate_by_tokens
 from helpers.execute_tool import execute_tool
 from helpers.validate_config import SettingsModel
-from collections.abc import Iterator, Iterable
-from loguru import logger
-import ollama
 
 
 def _iter_chunks(
@@ -27,14 +30,6 @@ def _iter_chunks(
     return iter([response])
 
 
-class _NullCallbacks:
-    def __getattr__(self, _name: str):
-        # Кэшируем no-op на классе, чтобы не создавать lambda каждый раз
-        noop = lambda *a, **kw: None
-        setattr(self, _name, noop)
-        return noop
-
-
 def chat_model(
     settings: SettingsModel,
     messages: List[Dict[str, Any]],
@@ -43,9 +38,8 @@ def chat_model(
     tool_functions: Dict[str, Any],
     project_root: Path,
     workspace_dir: Path,
-    callbacks: ChatCallbacks | None = None,
+    cb: ConsoleRenderer,
 ) -> list[dict]:
-    cb = callbacks or _NullCallbacks()
 
     tool_iteration = 0
     while tool_iteration < settings.tool_iterations:

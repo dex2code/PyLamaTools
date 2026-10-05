@@ -221,3 +221,4 @@ __marimo__/
 test.py
 workspace/
 user_prompt.txt
+*.tar.gz

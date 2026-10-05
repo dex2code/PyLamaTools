@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import Dict, Any, List
-from pathlib import Path
-from datetime import datetime, timezone
-import os
+
 import fnmatch
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 def find_files_and_dirs(

@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import TypedDict, Any
+from typing import Any, TypedDict
 
 
 class _DeleteResult(TypedDict):

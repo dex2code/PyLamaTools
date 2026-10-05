@@ -1,7 +1,9 @@
 from __future__ import annotations
-from loguru import logger
-from helpers.validate_config import SettingsModel
+
 import ollama
+from loguru import logger
+
+from helpers.validate_config import SettingsModel
 
 
 def get_ollama_client(settings: SettingsModel) -> ollama.Client:

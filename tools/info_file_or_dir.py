@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import stat as stat_mod
 from datetime import datetime, timezone
-from typing import Dict, Any, Union
+from typing import Any, Dict, Union
 
 
 def _ok(result: Dict) -> Dict[str, Any]:

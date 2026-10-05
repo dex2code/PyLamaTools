@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 import os
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 
 def _safe_str(value: Any) -> str:

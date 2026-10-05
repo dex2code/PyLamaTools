@@ -1,10 +1,12 @@
 from __future__ import annotations
-from loguru import logger
-from typing import Dict, Any, Union
-from pathlib import Path
-import ollama
+
 import json
 import unicodedata
+from pathlib import Path
+from typing import Any, Dict, Union
+
+import ollama
+from loguru import logger
 
 
 def _is_path_correct(v: str) -> bool:

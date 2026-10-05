@@ -25,9 +25,10 @@ settings = {
     "model_streaming": True,
 
     "options": {
-        "temperature": 0.6,
+        "temperature": 1.0,
         "top_k": 20,
-        "top_p": 0.95
+        "top_p": 0.95,
+        "presence_penalty": 1.5
     }
 
 }

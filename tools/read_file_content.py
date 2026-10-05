@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import Dict, Optional, Any
-from pathlib import Path
+
 import codecs
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 def read_file_content(
