@@ -10,6 +10,7 @@ settings = {
 
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "ornith-1.5:9b",
+    "ollama_timeout": 300,
 
     "tool_iterations": 128,
 

@@ -14,6 +14,7 @@ class SettingsModel(BaseModel):
     system_prompt_file_encoding: str = Field(min_length=1)
     ollama_url: AnyHttpUrl
     ollama_model: str = Field(min_length=1)
+    ollama_timeout: int = Field(ge=1)
     tool_iterations: int = Field(ge=1)
     context_max_tokens: int = Field(ge=0)
     context_encoding: Literal["cl100k_base", "o200k_base"]

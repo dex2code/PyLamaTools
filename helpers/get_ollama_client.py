@@ -21,7 +21,10 @@ def get_ollama_client(settings: SettingsModel) -> ollama.Client:
         RuntimeError: если указанная модель отсутствует.
     """
     try:
-        ollama_client = ollama.Client(str(settings.ollama_url))
+        ollama_client = ollama.Client(
+            host=str(settings.ollama_url),
+            timeout=settings.ollama_timeout,
+        )
         list_models = ollama_client.list()
     except Exception as e:
         logger.exception(
