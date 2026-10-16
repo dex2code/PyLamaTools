@@ -106,10 +106,14 @@ read_file_content.tool_description = {
     "type": "function",
     "function": {
         "name": "tools.read_file_content.read_file_content",
-        "description": "Читает содержимое текстового файла. "
-        "Возвращает словарь с полями: success (bool), file_path (str), content (строка или None), "
-        "size_chars (int), error (строка или None). Поддерживает указание кодировки "
-        "(по умолчанию utf-8) и ограничение на объём чтения в символах (max_chars).",
+        "description": (
+            "Читает содержимое текстового файла. "
+            "Возвращает словарь с полями: "
+            "success (bool), file_path (str), content (строка или None), "
+            "size_chars (int), error (строка или None). "
+            "Поддерживает указание кодировки (по умолчанию utf-8) "
+            "и ограничение на объём чтения в символах (max_chars)."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

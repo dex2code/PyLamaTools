@@ -60,9 +60,11 @@ create_dir.tool_description = {
     "type": "function",
     "function": {
         "name": "tools.create_dir.create_dir",
-        "description": "Создаёт новый каталог по указанному пути включая промежуточные каталоги. "
-        "Путь может быть абсолютным или относительным. "
-        "Возвращает словарь с полями: success (bool), error (строка или None)",
+        "description": (
+            "Создаёт новый каталог по указанному пути включая промежуточные каталоги. "
+            "Путь может быть абсолютным или относительным. "
+            "Возвращает словарь с полями: success (bool), error (строка или None)"
+        ),
         "parameters": {
             "type": "object",
             "properties": {

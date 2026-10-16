@@ -125,13 +125,15 @@ find_files_and_dirs.tool_description = {
     "type": "function",
     "function": {
         "name": "tools.find_files_and_dirs.find_files_and_dirs",
-        "description": "Рекурсивно или не рекурсивно ищет файлы (и опционально каталоги) "
-        "в заданной директории по glob-шаблону. Возвращает структурированный словарь с полями: "
-        "success (bool), "
-        "files (список найденных объектов с полями path, name, size_bytes, modified, is_dir), "
-        "count (int), "
-        "error (строка или null). "
-        "Если поиск завершается с ошибкой, success=false и error содержит описание проблемы.",
+        "description": (
+            "Рекурсивно или не рекурсивно ищет файлы (и опционально каталоги) "
+            "в заданной директории по glob-шаблону. "
+            "Возвращает структурированный словарь с полями: success (bool), "
+            "files (список найденных объектов с полями "
+            "path, name, size_bytes, modified, is_dir), count (int), error (строка или null). "
+            "Если поиск завершается с ошибкой, "
+            "success=false и error содержит описание проблемы."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

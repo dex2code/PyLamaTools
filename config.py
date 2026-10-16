@@ -9,7 +9,7 @@ settings = {
     "system_prompt_file_encoding": "utf-8",
 
     "ollama_url": "http://127.0.0.1:11434",
-    "ollama_model": "ornith-1.5:9b",
+    "ollama_model": "qwen3.5:9b-mlx",
     "ollama_timeout": 3600,
 
     "tool_iterations": 128,
@@ -26,10 +26,12 @@ settings = {
     "model_streaming": True,
 
     "options": {
-        "temperature": 1.0,
+        "temperature": 0.6,
         "top_k": 20,
         "top_p": 0.95,
-        "presence_penalty": 1.5
+        "presence_penalty": 0.0,
+        "repeat_penalty": 1.0,
+        "min_p": 0.0
     }
 
 }
