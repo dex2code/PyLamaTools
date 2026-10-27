@@ -7,9 +7,11 @@ attrs==26.1.0
 babel==2.18.0
 certifi==2026.7.22
 charset-normalizer==3.5.2
+click==8.5.0
 colorama==0.4.6
 courlan==1.4.0
 dateparser==1.4.3
+ddgs==9.16.1
 frozenlist==1.8.0
 h11==0.16.0
 htmldate==1.11.0
@@ -27,6 +29,7 @@ ollama==0.6.3
 packaging==26.3
 pip-autoremove==0.10.0
 pip3-autoremove==2.1.0
+primp==2.0.1
 prompt_toolkit==3.0.53
 propcache==0.5.4
 puretiktoken==0.2.1
