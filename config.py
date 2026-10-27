@@ -9,7 +9,7 @@ settings = {
     "system_prompt_file_encoding": "utf-8",
 
     "ollama_url": "http://127.0.0.1:11434",
-    "ollama_model": "qwen3.5:9b-mlx",
+    "ollama_model": "gemma4:e4b-mlx",
     "ollama_timeout": 3600,
 
     "tool_iterations": 128,
@@ -31,7 +31,12 @@ settings = {
         "top_p": 0.95,
         "presence_penalty": 0.0,
         "repeat_penalty": 1.0,
-        "min_p": 0.0
-    }
+        "min_p": 0.0,
+    },
+
+    "http_proxies": {
+        "http": "http://127.0.0.1:10808",
+        "https": "http://127.0.0.1:10808",
+    },
 
 }

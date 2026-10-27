@@ -50,7 +50,7 @@ def is_valid_tool_desc(tool_dict: Dict[str, Any]) -> bool:
     try:
         Tool.model_validate(tool_dict)
     except ValidationError as e:
-        logger.exception("Ошибка при валидации описания инструмента!")
+        logger.error(f"Ошибка при валидации описания инструмента: {e}")
         return False
 
     return True

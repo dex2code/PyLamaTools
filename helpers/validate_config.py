@@ -25,6 +25,7 @@ class SettingsModel(BaseModel):
     model_thinking: bool
     model_streaming: bool
     options: Optional[Dict[str, Any]] = None
+    http_proxies: Optional[Dict[str, str]] = {}
 
 
 def validate_config(raw_settings: Dict[str, Any]) -> SettingsModel:
